@@ -55,7 +55,7 @@ const (
 	L_ARROW
 
 	LET
-	CONST
+	MUT
 	IMPORT
 	FROM
 	FN
@@ -74,7 +74,7 @@ const (
 
 var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"let":       LET,
-	"const":     CONST,
+	"mut":       MUT,
 	"import":    IMPORT,
 	"from":      FROM,
 	"fn":        FN,
@@ -91,7 +91,7 @@ var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"interface": INTERFACE,
 }
 
-func (kind TokenKind) toString() string {
+func (kind TokenKind) ToString() string {
 	switch kind {
 	case EOF:
 		return "eof"
@@ -167,8 +167,8 @@ func (kind TokenKind) toString() string {
 		return "percent"
 	case LET:
 		return "let"
-	case CONST:
-		return "const"
+	case MUT:
+		return "mut"
 	case IMPORT:
 		return "import"
 	case FROM:
@@ -213,9 +213,9 @@ func (token Token) is(kinds ...TokenKind) bool {
 
 func (token Token) Debug() {
 	if token.is(IDENTIFIER, NUMBER, STRING) {
-		fmt.Printf("%s (%s)\n", token.Kind.toString(), token.Value)
+		fmt.Printf("%s (%s)\n", token.Kind.ToString(), token.Value)
 	} else {
-		fmt.Printf("%s ()\n", token.Kind.toString())
+		fmt.Printf("%s ()\n", token.Kind.ToString())
 	}
 }
 
