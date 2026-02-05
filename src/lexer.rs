@@ -1,97 +1,78 @@
 use std::fs;
 
 #[derive(Debug)]
-pub enum TokenType {
-    EOF,
-    ILLEGAL,
+pub enum Token {
+    PLUS(char),
 
-    INT,
-    FLOAT,
-    STRING,
+    IDENTIFIER(String),
 
-    PLUS,
-    MINUS,
-    ASTERISK,
-    SLASH,
-    PERCENT,
-    POWER,
-
-    SEMICOLON,
-    LPAREN,
-    RPAREN
+    ILLEGAL(char),
 }
 
 #[derive(Debug)]
-pub enum TokenLiteral {
-    Str(String),
-    Bool(bool),
-    Int(i64),
-    Float(f64)
-}
-
-
-#[derive(Debug)]
-pub struct Token {
-    kind: TokenType,
-    literal: TokenLiteral,
-    line_no: u64,
-    char_index: u64,
-}
-
 pub struct Lexer {
     source: String,
-    position: usize,
-    line_no: usize
+    pub position: usize,
 }
 
 impl Lexer {
-    pub fn new(source: impl Into<String>) -> Self {
+    pub fn new(source: String) -> Self {
         Self {
-            source: source.into(),
+            source: source.chars().collect(),
             position: 0,
-            line_no: 0
         }
     }
 
-    fn current_char(&mut self) -> Option<char> {
+    pub fn parse(&mut self) -> Vec<Token> {
+        let mut res = Vec::new();
+        while let Some(tok) = self.next_token()  {
+            res.push(tok);
+        };
+        res
+    }   
+
+    fn current_char(&self) -> Option<char> {
         self.source.chars().nth(self.position)
     }
 
-    fn next_char(&mut self) -> Option<char> {
-        self.source.chars().nth(self.position + 1)
+    fn increment_position(&mut self) -> Option<char> {
+        let char = self.current_char();
+        self.position += 1;
+        char
     }
 
-    fn advance(&mut self)-> Result<char, ()> {
-        if self.position >= self.source.len() {
-            return Err(());
-        }
-
-        let res = match self.current_char() {
-            Some(c) => Ok(c),
-            None => Err(())
+    fn next_token(&mut self) -> Option<Token> {
+        let current = match self.current_char() {
+            Some(c) => c,
+            None => todo!(),
         };
 
-        self.position += 1;
+        let tok: Option<Token> = match current {
+            '+' => Some(Token::PLUS(current)),
+            c => {
+                if c.is_whitespace() {
+                    None
+                } else {
+                    Some(self.read_identifier())
+                }
+            }
+        };
 
-        res
+        self.increment_position();
+        tok
     }
 
-    pub fn skip_whitespace(&mut self) {
-        while let Ok(char) = self.advance() {
-            if char.is_whitespace() {
-                if char == '\n' {
-                    self.line_no += 1;
-                }
-                if char == '\r' {
-                    self.line_no += 1;
-                    if self.next_char().is_some_and(|c| c == '\n') {
-                        let _ = self.advance();
-                    }
-                }
-            } else {
-                break;
-            }
+    fn read_identifier(&mut self) -> Token {
+        let start_position = self.position;
+        while let Some(c) = self.increment_position()
+            && c.is_alphabetic()
+        {
+            println!("{}", c)
         }
+        println!("{start_position} {}",self.position);
+        //println!("{}", self.current_char().unwrap());
+
+        return Token::IDENTIFIER("hi".to_string());
     }
 }
 

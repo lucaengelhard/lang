@@ -8,7 +8,7 @@ fn main() {
         Err(_e) => panic!()
     };
 
+    println!("{}", file_contents);
     let mut lex = Lexer::new(file_contents);
-
-    lex.skip_whitespace();
+    println!("{:?}", lex.parse());
 }
