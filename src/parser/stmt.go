@@ -51,7 +51,16 @@ func parse_declartion_stmt(p *parser) ast.Stmt {
 func parse_struct_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.STRUCT)
 	identifier := p.expect(lexer.IDENTIFIER).Value
+	var typeArg ast.Type
 	var properties = map[string]ast.StructProperty{}
+
+	if p.currentTokenKind() == lexer.LESS {
+		p.advance()
+
+		typeArg = parse_type(p, default_bp)
+
+		p.expect(lexer.GREATER)
+	}
 
 	p.expect(lexer.OPEN_CURLY)
 
@@ -92,6 +101,7 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 
 	return ast.StructStmt{
 		Identifier: identifier,
+		Type:       typeArg,
 		Properties: properties,
 	}
 }

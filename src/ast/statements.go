@@ -33,6 +33,7 @@ type StructProperty struct {
 
 type StructStmt struct {
 	Identifier string
+	Type       Type
 	Properties map[string]StructProperty
 }
 
@@ -43,16 +44,6 @@ type FnArg struct {
 	IsMutable  bool
 	Type       Type
 }
-
-type FnStmt struct {
-	Identifier  string
-	Arguments   map[string]FnArg
-	GenericType Type
-	ReturnType  Type
-	Body        []Stmt
-}
-
-func (n FnStmt) stmt() {}
 
 type IfStmt struct {
 	Condition Expr
