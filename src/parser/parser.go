@@ -38,6 +38,10 @@ func (p *parser) currentToken() lexer.Token {
 	return p.tokens[p.pos]
 }
 
+func (p *parser) printCurrentToken() {
+	fmt.Println(p.currentTokenKind().ToString())
+}
+
 func (p *parser) advance() lexer.Token {
 	tk := p.currentToken()
 	p.pos++

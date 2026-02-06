@@ -82,4 +82,5 @@ func createTokenLookups() {
 
 	stmt(lexer.LET, parse_declartion_stmt)
 	stmt(lexer.STRUCT, parse_struct_stmt)
+	stmt(lexer.FN, parse_fm_stmt)
 }

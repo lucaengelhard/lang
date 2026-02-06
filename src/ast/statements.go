@@ -37,3 +37,18 @@ type StructStmt struct {
 }
 
 func (n StructStmt) stmt() {}
+
+type FnArg struct {
+	Identifier string
+	IsMutable  bool
+	Type       Type
+}
+
+type FnStmt struct {
+	Identifier string
+	Arguments  map[string]FnArg
+	ReturnType Type
+	Body       []Stmt
+}
+
+func (n FnStmt) stmt() {}
