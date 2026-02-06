@@ -12,3 +12,10 @@ type GenericType struct {
 }
 
 func (t GenericType) _type() {}
+
+type IsType struct {
+	Left  Type
+	Right Type
+}
+
+func (t IsType) _type() {}

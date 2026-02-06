@@ -32,6 +32,7 @@ func type_nud(kind lexer.TokenKind, nud_fn type_nud_handler) {
 func createTokenTypeLookups() {
 	type_nud(lexer.IDENTIFIER, parse_symbol_type)
 	type_led(lexer.LESS, call, parse_generic_type)
+	type_led(lexer.IS, logical, parse_is_type)
 }
 
 func parse_type(p *parser, bp binding_power) ast.Type {
@@ -87,5 +88,13 @@ func parse_generic_type(p *parser, left ast.Type, bp binding_power) ast.Type {
 	return ast.GenericType{
 		Identifier: identifier,
 		Arguments:  arguments,
+	}
+}
+
+func parse_is_type(p *parser, left ast.Type, bp binding_power) ast.Type {
+	p.advance()
+	return ast.IsType{
+		Left:  left,
+		Right: parse_type(p, bp),
 	}
 }
