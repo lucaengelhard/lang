@@ -100,6 +100,14 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.FN)
 	identifier := p.expect(lexer.IDENTIFIER).Value
 	var arguments = map[string]ast.FnArg{}
+	var genericType ast.Type
+
+	if p.currentTokenKind() == lexer.LESS {
+		p.advance()
+		genericType = parse_type(p, default_bp)
+		p.expect(lexer.GREATER)
+	}
+
 	p.expect(lexer.OPEN_PAREN)
 
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
@@ -134,11 +142,11 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 
 	p.expect(lexer.CLOSE_PAREN)
 
-	var ReturnType ast.Type
+	var returnType ast.Type
 
 	if p.currentTokenKind() == lexer.R_ARROW {
 		p.advance()
-		ReturnType = parse_type(p, default_bp)
+		returnType = parse_type(p, default_bp)
 	}
 
 	body := make([]ast.Stmt, 0)
@@ -152,10 +160,11 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.FnStmt{
-		Identifier: identifier,
-		Arguments:  arguments,
-		ReturnType: ReturnType,
-		Body:       body,
+		Identifier:  identifier,
+		Arguments:   arguments,
+		GenericType: genericType,
+		ReturnType:  returnType,
+		Body:        body,
 	}
 }
 

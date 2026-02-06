@@ -45,10 +45,11 @@ type FnArg struct {
 }
 
 type FnStmt struct {
-	Identifier string
-	Arguments  map[string]FnArg
-	ReturnType Type
-	Body       []Stmt
+	Identifier  string
+	Arguments   map[string]FnArg
+	GenericType Type
+	ReturnType  Type
+	Body        []Stmt
 }
 
 func (n FnStmt) stmt() {}
