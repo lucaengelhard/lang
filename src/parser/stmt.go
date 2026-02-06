@@ -256,3 +256,32 @@ func parse_break_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.SEMI_COLON)
 	return ast.BreakStmt{}
 }
+
+func parse_import_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.IMPORT)
+	path := p.expect(lexer.STRING).Value
+	p.expect(lexer.R_ARROW)
+
+	var identifier string
+	items := make([]string, 0)
+
+	if p.currentTokenKind() == lexer.OPEN_CURLY {
+		p.advance()
+		for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+			items = append(items, p.expect(lexer.IDENTIFIER).Value)
+
+			if p.currentTokenKind() != lexer.CLOSE_CURLY {
+				p.expect(lexer.COMMA)
+			}
+		}
+		p.expect(lexer.CLOSE_CURLY)
+	} else {
+		identifier = p.expect(lexer.IDENTIFIER).Value
+	}
+
+	return ast.ImportStmt{
+		Path:       path,
+		Identifier: identifier,
+		Items:      items,
+	}
+}

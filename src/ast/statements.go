@@ -90,3 +90,11 @@ func (n ContinueStmt) stmt() {}
 type BreakStmt struct{}
 
 func (n BreakStmt) stmt() {}
+
+type ImportStmt struct {
+	Identifier string
+	Items      []string
+	Path       string
+}
+
+func (n ImportStmt) stmt() {}
