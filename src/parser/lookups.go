@@ -79,6 +79,8 @@ func createTokenLookups() {
 
 	led(lexer.OPEN_CURLY, call, parse_struct_instantiation_expr)
 	led(lexer.OPEN_PAREN, call, parse_fn_call_expr)
+	nud(lexer.OPEN_PAREN, parse_fn_declare_expr_nud)
+	nud(lexer.LESS, parse_fn_declare_expr_nud)
 	nud(lexer.OPEN_BRACKET, parse_array_instantiation_expr)
 
 	stmt(lexer.LET, parse_declartion_stmt)

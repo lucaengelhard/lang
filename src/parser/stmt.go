@@ -99,72 +99,11 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 func parse_fn_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.FN)
 	identifier := p.expect(lexer.IDENTIFIER).Value
-	var arguments = map[string]ast.FnArg{}
-	var genericType ast.Type
 
-	if p.currentTokenKind() == lexer.LESS {
-		p.advance()
-		genericType = parse_type(p, default_bp)
-		p.expect(lexer.GREATER)
-	}
-
-	p.expect(lexer.OPEN_PAREN)
-
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
-		var explicitType ast.Type
-		isMutable := p.currentTokenKind() == lexer.MUT
-		if isMutable {
-			p.advance()
-		}
-
-		argumentIdentifier := p.expect(lexer.IDENTIFIER).Value
-		if p.currentTokenKind() == lexer.COLON {
-			p.advance()
-			explicitType = parse_type(p, default_bp)
-		}
-
-		_, exists := arguments[argumentIdentifier]
-
-		if exists {
-			p.addErr(fmt.Sprintf("Argument %s already exists in function %s", argumentIdentifier, identifier))
-		}
-
-		arguments[argumentIdentifier] = ast.FnArg{
-			Identifier: argumentIdentifier,
-			IsMutable:  isMutable,
-			Type:       explicitType,
-		}
-
-		if p.currentTokenKind() != lexer.CLOSE_PAREN {
-			p.expect(lexer.COMMA)
-		}
-	}
-
-	p.expect(lexer.CLOSE_PAREN)
-
-	var returnType ast.Type
-
-	if p.currentTokenKind() == lexer.R_ARROW {
-		p.advance()
-		returnType = parse_type(p, default_bp)
-	}
-
-	body := make([]ast.Stmt, 0)
-
-	p.expect(lexer.OPEN_CURLY)
-
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		body = append(body, parse_stmt(p))
-	}
-
-	p.expect(lexer.CLOSE_CURLY)
-
-	return ast.FnStmt{
-		Identifier:  identifier,
-		Arguments:   arguments,
-		GenericType: genericType,
-		ReturnType:  returnType,
-		Body:        body,
+	return ast.DeclarationStmt{
+		Identifier:    identifier,
+		IsMutable:     false,
+		AssignedValue: parse_fn_declare_expr(p, identifier),
 	}
 }
 
