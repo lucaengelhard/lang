@@ -68,6 +68,15 @@ type WhileStmt struct {
 
 func (n WhileStmt) stmt() {}
 
+type ForStmt struct {
+	Assignment Stmt
+	Condition  Stmt
+	Increment  Stmt
+	Body       []Stmt
+}
+
+func (n ForStmt) stmt() {}
+
 type ReturnStmt struct {
 	Value Expr
 }

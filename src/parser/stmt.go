@@ -7,7 +7,7 @@ import (
 	"github.com/lucaengelhard/lang/src/lexer"
 )
 
-func parse_stmt(p *parser) ast.Stmt {
+func parse_stmt(p *parser, with_semicolon ...bool) ast.Stmt {
 	stmt_fn, exists := stmt_lu[p.currentTokenKind()]
 
 	if exists {
@@ -15,7 +15,11 @@ func parse_stmt(p *parser) ast.Stmt {
 	}
 
 	expression := parse_expr(p, default_bp)
-	p.expect(lexer.SEMI_COLON)
+
+	if (len(with_semicolon) > 0 && with_semicolon[0]) || len(with_semicolon) == 0 {
+		p.expect(lexer.SEMI_COLON)
+	}
+
 	return ast.ExpressionStmt{
 		Expression: expression,
 	}
@@ -205,6 +209,29 @@ func parse_while_stmt(p *parser) ast.Stmt {
 	return ast.WhileStmt{
 		Condition: cond,
 		Body:      body,
+	}
+}
+
+func parse_for_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.FOR)
+	p.expect(lexer.OPEN_PAREN)
+	assignemt := parse_stmt(p)
+	cond := parse_stmt(p)
+	incr := parse_stmt(p, false)
+	p.expect(lexer.CLOSE_PAREN)
+
+	p.expect(lexer.OPEN_CURLY)
+	body := make([]ast.Stmt, 0)
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+		body = append(body, parse_stmt(p))
+	}
+	p.expect(lexer.CLOSE_CURLY)
+
+	return ast.ForStmt{
+		Assignment: assignemt,
+		Condition:  cond,
+		Increment:  incr,
+		Body:       body,
 	}
 }
 
