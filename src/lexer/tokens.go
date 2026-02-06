@@ -57,7 +57,6 @@ const (
 	LET
 	MUT
 	IMPORT
-	FROM
 	FN
 	IF
 	ELSE
@@ -65,24 +64,26 @@ const (
 	WHILE
 	EXPORT
 	INTERFACE
-	IN
+	IN // TODO: For In Loop?
 	TRUE
 	FALSE
 	STRUCT
 	PUBLIC
 	STATIC
 	ENUM
+	IS
 
 	RETURN
 	CONTINUE
 	BREAK
+
+	_TokenCount
 )
 
 var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"let":       LET,
 	"mut":       MUT,
 	"import":    IMPORT,
-	"from":      FROM,
 	"fn":        FN,
 	"if":        IF,
 	"else":      ELSE,
@@ -97,9 +98,67 @@ var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"interface": INTERFACE,
 	"public":    PUBLIC,
 	"static":    STATIC,
+	"is":        IS,
 	"return":    RETURN,
 	"continue":  CONTINUE,
 	"break":     BREAK,
+}
+
+var token_string_lu map[TokenKind]string = map[TokenKind]string{
+	EOF:            "eof",
+	NUMBER:         "number",
+	STRING:         "string",
+	IDENTIFIER:     "identifier",
+	OPEN_BRACKET:   "open_bracket",
+	CLOSE_BRACKET:  "close_bracket",
+	OPEN_CURLY:     "open_curly",
+	CLOSE_CURLY:    "close_curly",
+	OPEN_PAREN:     "open_paren",
+	CLOSE_PAREN:    "close_paren",
+	ASSIGNMENT:     "assignment",
+	EQUALS:         "equals",
+	NOT_EQUALS:     "not_equals",
+	NOT:            "not",
+	LESS:           "less",
+	LESS_EQUALS:    "less_equals",
+	GREATER:        "greater",
+	GREATER_EQUALS: "greater_equals",
+	OR:             "or",
+	AND:            "and",
+	DOT:            "dot",
+	SEMI_COLON:     "semi_colon",
+	COLON:          "colon",
+	QUESTION:       "question",
+	COMMA:          "comma",
+	PLUS_PLUS:      "plus_plus",
+	MINUS_MINUS:    "minus_minus",
+	PLUS_EQUALS:    "plus_equals",
+	MINUS_EQUALS:   "minus_equals",
+	PLUS:           "plus",
+	MINUS:          "dash",
+	SLASH:          "slash",
+	STAR:           "star",
+	PERCENT:        "percent",
+	R_ARROW:        "right_arrow",
+	L_ARROW:        "left_arrow",
+}
+
+func InitTokenLookup() {
+	for value, kind := range reserved_lu {
+		_, exists := token_string_lu[kind]
+		if exists {
+			panic(fmt.Sprintf("Definition conflict: %s already defined", kind.ToString()))
+		}
+
+		token_string_lu[kind] = value
+	}
+
+	for kind := range _TokenCount {
+		_, exists := token_string_lu[kind]
+		if !exists {
+			panic(fmt.Sprintf("Token %s not in lookup", kind.ToString()))
+		}
+	}
 }
 
 func IsReserved(identifier string) bool {
@@ -108,124 +167,13 @@ func IsReserved(identifier string) bool {
 }
 
 func (kind TokenKind) ToString() string {
-	switch kind {
-	case EOF:
-		return "eof"
-	case NUMBER:
-		return "number"
-	case STRING:
-		return "string"
-	case TRUE:
-		return "true"
-	case FALSE:
-		return "false"
-	case IDENTIFIER:
-		return "identifier"
-	case OPEN_BRACKET:
-		return "open_bracket"
-	case CLOSE_BRACKET:
-		return "close_bracket"
-	case OPEN_CURLY:
-		return "open_curly"
-	case CLOSE_CURLY:
-		return "close_curly"
-	case OPEN_PAREN:
-		return "open_paren"
-	case CLOSE_PAREN:
-		return "close_paren"
-	case ASSIGNMENT:
-		return "assignment"
-	case EQUALS:
-		return "equals"
-	case NOT_EQUALS:
-		return "not_equals"
-	case NOT:
-		return "not"
-	case LESS:
-		return "less"
-	case LESS_EQUALS:
-		return "less_equals"
-	case GREATER:
-		return "greater"
-	case GREATER_EQUALS:
-		return "greater_equals"
-	case OR:
-		return "or"
-	case AND:
-		return "and"
-	case DOT:
-		return "dot"
-	case SEMI_COLON:
-		return "semi_colon"
-	case COLON:
-		return "colon"
-	case QUESTION:
-		return "question"
-	case COMMA:
-		return "comma"
-	case PLUS_PLUS:
-		return "plus_plus"
-	case MINUS_MINUS:
-		return "minus_minus"
-	case PLUS_EQUALS:
-		return "plus_equals"
-	case MINUS_EQUALS:
-		return "minus_equals"
-	case PLUS:
-		return "plus"
-	case MINUS:
-		return "dash"
-	case SLASH:
-		return "slash"
-	case STAR:
-		return "star"
-	case PERCENT:
-		return "percent"
-	case LET:
-		return "let"
-	case MUT:
-		return "mut"
-	case IMPORT:
-		return "import"
-	case FROM:
-		return "from"
-	case FN:
-		return "fn"
-	case IF:
-		return "if"
-	case ELSE:
-		return "else"
-	case FOR:
-		return "for"
-	case WHILE:
-		return "while"
-	case EXPORT:
-		return "export"
-	case IN:
-		return "in"
-	case STRUCT:
-		return "struct"
-	case R_ARROW:
-		return "right_arrow"
-	case L_ARROW:
-		return "left_arrow"
-	case ENUM:
-		return "enum"
-	case INTERFACE:
-		return "interface"
-	case PUBLIC:
-		return "public"
-	case STATIC:
-		return "static"
-	case RETURN:
-		return "return"
-	case CONTINUE:
-		return "continue"
-	case BREAK:
-		return "break"
-	default:
+	res, exist := token_string_lu[kind]
+
+	if !exist {
 		return fmt.Sprintf("unknown(%d)", kind)
 	}
+
+	return res
 }
 
 type TokenPosition struct {

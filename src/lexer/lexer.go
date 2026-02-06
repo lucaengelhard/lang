@@ -65,6 +65,7 @@ func Tokenize(source string) []Token {
 }
 
 func createLexer(source string) *lexer {
+	InitTokenLookup()
 	return &lexer{pos: 0, source: source, Tokens: make([]Token, 0), patterns: []regexPattern{
 		{regexp.MustCompile(`\s+`), skipHandler},
 		{regexp.MustCompile(`\/\/.*`), skipHandler},
