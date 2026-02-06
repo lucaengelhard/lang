@@ -6,8 +6,9 @@ type SymbolType struct {
 
 func (t SymbolType) _type() {}
 
-type ArrayType struct {
-	Type Type
+type GenericType struct {
+	Identifier string
+	Arguments  []Type
 }
 
-func (t ArrayType) _type() {}
+func (t GenericType) _type() {}

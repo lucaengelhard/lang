@@ -5,6 +5,7 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
+	"github.com/lucaengelhard/lang/src/lib"
 )
 
 type type_nud_handler func(p *parser) ast.Type
@@ -30,7 +31,7 @@ func type_nud(kind lexer.TokenKind, nud_fn type_nud_handler) {
 
 func createTokenTypeLookups() {
 	type_nud(lexer.IDENTIFIER, parse_symbol_type)
-	type_nud(lexer.OPEN_BRACKET, parse_array_type)
+	type_led(lexer.LESS, call, parse_generic_type)
 }
 
 func parse_type(p *parser, bp binding_power) ast.Type {
@@ -61,12 +62,30 @@ func parse_symbol_type(p *parser) ast.Type {
 	return ast.SymbolType{Value: p.expect(lexer.IDENTIFIER).Value}
 }
 
-// remove explicit array type but modifiy symbol type so its generic
-func parse_array_type(p *parser) ast.Type {
-	p.advance()
-	p.expect(lexer.CLOSE_BRACKET)
-	var arrayType = parse_type(p, default_bp)
-	return ast.ArrayType{
-		Type: arrayType,
+func parse_generic_type(p *parser, left ast.Type, bp binding_power) ast.Type {
+	symbol, err := lib.ExpectType[ast.SymbolType](left)
+	identifier := symbol.Value
+
+	if err != nil {
+		p.addErr(err.Error())
+	}
+
+	var arguments = []ast.Type{}
+	p.expect(lexer.LESS)
+
+	for p.hasTokens() && p.currentTokenKind() != lexer.GREATER {
+		typeArg := parse_type(p, logical)
+		arguments = append(arguments, typeArg)
+
+		if p.currentTokenKind() != lexer.GREATER {
+			p.expect(lexer.COMMA)
+		}
+	}
+
+	p.expect(lexer.GREATER)
+
+	return ast.GenericType{
+		Identifier: identifier,
+		Arguments:  arguments,
 	}
 }
