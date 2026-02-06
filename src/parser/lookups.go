@@ -67,9 +67,19 @@ func createTokenLookups() {
 	led(lexer.SLASH, multiplicative, parse_binary_expr)
 	led(lexer.PERCENT, multiplicative, parse_binary_expr)
 
+	led(lexer.ASSIGNMENT, assignment, parse_assignment_expr)
+	led(lexer.PLUS_EQUALS, assignment, parse_assignment_expr)
+	led(lexer.MINUS_EQUALS, assignment, parse_assignment_expr)
+
 	nud(lexer.NUMBER, parse_primary_expr)
 	nud(lexer.STRING, parse_primary_expr)
 	nud(lexer.IDENTIFIER, parse_primary_expr)
+	nud(lexer.MINUS, parser_prefix_expr)
+	nud(lexer.OPEN_PAREN, parse_grouping_expr)
+
+	led(lexer.OPEN_CURLY, call, parse_struct_instantiation_expr)
+	nud(lexer.OPEN_BRACKET, parse_array_instantiation_expr)
 
 	stmt(lexer.LET, parse_declartion_stmt)
+	stmt(lexer.STRUCT, parse_struct_stmt)
 }

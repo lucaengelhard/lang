@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
 )
@@ -20,8 +22,16 @@ func parse_stmt(p *parser) ast.Stmt {
 }
 
 func parse_declartion_stmt(p *parser) ast.Stmt {
+	var explicitType ast.Type
+
 	isMutable := p.nextIsKind(lexer.MUT)
 	identifier := p.expectError(lexer.IDENTIFIER, "Expected identifier in variable declaration").Value
+
+	if p.currentTokenKind() == lexer.COLON {
+		p.advance()
+		explicitType = parse_type(p, default_bp)
+	}
+
 	p.expect(lexer.ASSIGNMENT)
 	assignedValue := parse_expr(p, assignment)
 	p.expect(lexer.SEMI_COLON)
@@ -30,5 +40,54 @@ func parse_declartion_stmt(p *parser) ast.Stmt {
 		IsMutable:     isMutable,
 		Identifier:    identifier,
 		AssignedValue: assignedValue,
+		Type:          explicitType,
+	}
+}
+
+func parse_struct_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.STRUCT)
+	identifier := p.expect(lexer.IDENTIFIER).Value
+	var properties = map[string]ast.StructProperty{}
+
+	p.expect(lexer.OPEN_CURLY)
+
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+		if p.currentTokenKind() == lexer.IDENTIFIER || lexer.IsReserved(p.currentToken().Value) {
+			var propertyModifiers = map[string]ast.StructPropertyModifier{}
+			for lexer.IsReserved(p.currentToken().Value) {
+				propertyModifiers[p.currentToken().Value] = ast.StructPropertyModifier{
+					Name: p.currentToken().Value,
+				}
+				p.advance()
+			}
+
+			propertyName := p.expect(lexer.IDENTIFIER).Value
+			p.expect(lexer.COLON)
+			propertyType := parse_type(p, default_bp)
+			p.expect(lexer.SEMI_COLON)
+
+			_, exists := properties[propertyName]
+
+			if exists {
+				panic(fmt.Sprintf("Property %s already exists on struct %s", propertyName, identifier))
+			}
+
+			properties[propertyName] = ast.StructProperty{
+				Name:      propertyName,
+				Type:      propertyType,
+				Modifiers: propertyModifiers,
+			}
+
+			continue
+		}
+
+		panic("This souldn't be reached :( so i wrote bad struct code")
+	}
+
+	p.expect(lexer.CLOSE_CURLY)
+
+	return ast.StructStmt{
+		Identifier: identifier,
+		Properties: properties,
 	}
 }

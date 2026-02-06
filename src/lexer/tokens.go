@@ -69,6 +69,8 @@ const (
 	TRUE
 	FALSE
 	STRUCT
+	PUBLIC
+	STATIC
 	ENUM
 )
 
@@ -89,6 +91,13 @@ var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"struct":    STRUCT,
 	"enum":      ENUM,
 	"interface": INTERFACE,
+	"public":    PUBLIC,
+	"static":    STATIC,
+}
+
+func IsReserved(identifier string) bool {
+	_, exists := reserved_lu[identifier]
+	return exists
 }
 
 func (kind TokenKind) ToString() string {
@@ -197,6 +206,10 @@ func (kind TokenKind) ToString() string {
 		return "enum"
 	case INTERFACE:
 		return "interface"
+	case PUBLIC:
+		return "public"
+	case STATIC:
+		return "static"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}
