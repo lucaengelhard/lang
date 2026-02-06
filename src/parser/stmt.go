@@ -158,7 +158,7 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 func parse_if_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.IF)
 	p.expect(lexer.OPEN_PAREN)
-	cond := parse_expr(p, logical)
+	cond := parse_expr(p, assignment)
 	p.expect(lexer.CLOSE_PAREN)
 
 	true_stmt := make([]ast.Stmt, 0)
@@ -192,7 +192,7 @@ func parse_if_stmt(p *parser) ast.Stmt {
 func parse_while_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.WHILE)
 	p.expect(lexer.OPEN_PAREN)
-	cond := parse_expr(p, logical)
+	cond := parse_expr(p, assignment)
 	p.expect(lexer.CLOSE_PAREN)
 
 	p.expect(lexer.OPEN_CURLY)
@@ -216,4 +216,16 @@ func parse_return_stmt(p *parser) ast.Stmt {
 	return ast.ReturnStmt{
 		Value: expr,
 	}
+}
+
+func parse_continue_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.CONTINUE)
+	p.expect(lexer.SEMI_COLON)
+	return ast.ContinueStmt{}
+}
+
+func parse_break_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.BREAK)
+	p.expect(lexer.SEMI_COLON)
+	return ast.BreakStmt{}
 }

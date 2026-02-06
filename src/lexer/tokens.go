@@ -72,7 +72,10 @@ const (
 	PUBLIC
 	STATIC
 	ENUM
+
 	RETURN
+	CONTINUE
+	BREAK
 )
 
 var reserved_lu map[string]TokenKind = map[string]TokenKind{
@@ -95,6 +98,8 @@ var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"public":    PUBLIC,
 	"static":    STATIC,
 	"return":    RETURN,
+	"continue":  CONTINUE,
+	"break":     BREAK,
 }
 
 func IsReserved(identifier string) bool {
@@ -214,6 +219,10 @@ func (kind TokenKind) ToString() string {
 		return "static"
 	case RETURN:
 		return "return"
+	case CONTINUE:
+		return "continue"
+	case BREAK:
+		return "break"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

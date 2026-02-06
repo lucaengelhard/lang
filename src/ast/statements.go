@@ -73,3 +73,11 @@ type ReturnStmt struct {
 }
 
 func (n ReturnStmt) stmt() {}
+
+type ContinueStmt struct{}
+
+func (n ContinueStmt) stmt() {}
+
+type BreakStmt struct{}
+
+func (n BreakStmt) stmt() {}
