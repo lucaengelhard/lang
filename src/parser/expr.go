@@ -136,3 +136,25 @@ func parse_array_instantiation_expr(p *parser) ast.Expr {
 		Elements: elements,
 	}
 }
+
+func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	identifier := lib.ExpectType[ast.SymbolExpr](left).Value
+	var arguments = []ast.Expr{}
+
+	p.expect(lexer.OPEN_PAREN)
+
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
+		arguments = append(arguments, parse_expr(p, logical))
+
+		if p.currentTokenKind() != lexer.CLOSE_PAREN {
+			p.expect(lexer.COMMA)
+		}
+	}
+
+	p.expect(lexer.CLOSE_PAREN)
+
+	return ast.FnCallExpr{
+		Identifier: identifier,
+		Arguments:  arguments,
+	}
+}

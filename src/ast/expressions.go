@@ -56,3 +56,10 @@ type ArrayInstantiationExpr struct {
 }
 
 func (n ArrayInstantiationExpr) expr() {}
+
+type FnCallExpr struct {
+	Identifier string
+	Arguments  []Expr
+}
+
+func (n FnCallExpr) expr() {}
