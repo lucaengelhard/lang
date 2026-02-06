@@ -36,8 +36,17 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 func parse_primary_expr(p *parser) ast.Expr {
 	switch p.currentTokenKind() {
 	case lexer.NUMBER:
-		number, _ := strconv.ParseFloat(p.advance().Value, 64)
-		return ast.NumberExpr{Value: number}
+		val := p.advance().Value
+		if i, err := strconv.ParseInt(val, 10, 64); err == nil {
+			return ast.IntExpr{
+				Value: i,
+			}
+		}
+
+		number, _ := strconv.ParseFloat(val, 64)
+		return ast.FloatExpr{
+			Value: number,
+		}
 	case lexer.STRING:
 		return ast.StringExpr{Value: p.advance().Value}
 	case lexer.IDENTIFIER:

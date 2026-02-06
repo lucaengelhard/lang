@@ -8,6 +8,18 @@ type NumberExpr struct {
 
 func (n NumberExpr) expr() {}
 
+type IntExpr struct {
+	Value int64
+}
+
+func (n IntExpr) expr() {}
+
+type FloatExpr struct {
+	Value float64
+}
+
+func (n FloatExpr) expr() {}
+
 type StringExpr struct {
 	Value string
 }
