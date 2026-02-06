@@ -207,3 +207,13 @@ func parse_while_stmt(p *parser) ast.Stmt {
 		Body:      body,
 	}
 }
+
+func parse_return_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.RETURN)
+	expr := parse_expr(p, logical)
+	p.expect(lexer.SEMI_COLON)
+
+	return ast.ReturnStmt{
+		Value: expr,
+	}
+}

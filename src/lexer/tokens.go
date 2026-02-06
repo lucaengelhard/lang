@@ -72,6 +72,7 @@ const (
 	PUBLIC
 	STATIC
 	ENUM
+	RETURN
 )
 
 var reserved_lu map[string]TokenKind = map[string]TokenKind{
@@ -93,6 +94,7 @@ var reserved_lu map[string]TokenKind = map[string]TokenKind{
 	"interface": INTERFACE,
 	"public":    PUBLIC,
 	"static":    STATIC,
+	"return":    RETURN,
 }
 
 func IsReserved(identifier string) bool {
@@ -210,6 +212,8 @@ func (kind TokenKind) ToString() string {
 		return "public"
 	case STATIC:
 		return "static"
+	case RETURN:
+		return "return"
 	default:
 		return fmt.Sprintf("unknown(%d)", kind)
 	}

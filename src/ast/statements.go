@@ -67,3 +67,9 @@ type WhileStmt struct {
 }
 
 func (n WhileStmt) stmt() {}
+
+type ReturnStmt struct {
+	Value Expr
+}
+
+func (n ReturnStmt) stmt() {}
