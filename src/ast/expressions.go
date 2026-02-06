@@ -57,9 +57,14 @@ type ArrayInstantiationExpr struct {
 
 func (n ArrayInstantiationExpr) expr() {}
 
+type FnCallArg struct {
+	Identifier string
+	Value      Expr
+}
+
 type FnCallExpr struct {
 	Identifier string
-	Arguments  []Expr
+	Arguments  []FnCallArg
 }
 
 func (n FnCallExpr) expr() {}
