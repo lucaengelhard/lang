@@ -60,3 +60,10 @@ type IfStmt struct {
 }
 
 func (n IfStmt) stmt() {}
+
+type WhileStmt struct {
+	Condition Expr
+	Body      []Stmt
+}
+
+func (n WhileStmt) stmt() {}

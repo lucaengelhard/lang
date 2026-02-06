@@ -158,10 +158,11 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 func parse_if_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.IF)
 	p.expect(lexer.OPEN_PAREN)
-	cond := parse_expr(p, default_bp)
+	cond := parse_expr(p, logical)
+	p.expect(lexer.CLOSE_PAREN)
+
 	true_stmt := make([]ast.Stmt, 0)
 	false_stmt := make([]ast.Stmt, 0)
-	p.expect(lexer.OPEN_PAREN)
 
 	p.expect(lexer.OPEN_CURLY)
 
@@ -185,5 +186,24 @@ func parse_if_stmt(p *parser) ast.Stmt {
 		Condition: cond,
 		True:      true_stmt,
 		False:     false_stmt,
+	}
+}
+
+func parse_while_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.WHILE)
+	p.expect(lexer.OPEN_PAREN)
+	cond := parse_expr(p, logical)
+	p.expect(lexer.CLOSE_PAREN)
+
+	p.expect(lexer.OPEN_CURLY)
+	body := make([]ast.Stmt, 0)
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+		body = append(body, parse_stmt(p))
+	}
+	p.expect(lexer.CLOSE_CURLY)
+
+	return ast.WhileStmt{
+		Condition: cond,
+		Body:      body,
 	}
 }
