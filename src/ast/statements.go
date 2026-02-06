@@ -52,3 +52,11 @@ type FnStmt struct {
 }
 
 func (n FnStmt) stmt() {}
+
+type IfStmt struct {
+	Condition Expr
+	True      []Stmt
+	False     []Stmt
+}
+
+func (n IfStmt) stmt() {}
