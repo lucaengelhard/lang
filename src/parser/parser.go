@@ -7,9 +7,28 @@ import (
 	"github.com/lucaengelhard/lang/src/lexer"
 )
 
+type parserError struct {
+	msg  string
+	line int
+	col  int
+}
+
+func (err *parserError) ToString() string {
+	return fmt.Sprintf("[%v:%v] -> %s", err.line, err.col, err.msg)
+}
+
+func CreateParserError(msg string, line int, col int) *parserError {
+	return &parserError{
+		msg,
+		line,
+		col,
+	}
+}
+
 type parser struct {
 	tokens []lexer.Token
 	pos    int
+	errors []*parserError
 }
 
 func createParser(tokens []lexer.Token) *parser {
@@ -27,6 +46,13 @@ func Parse(tokens []lexer.Token) ast.BlockStmt {
 
 	for p.hasTokens() {
 		body = append(body, parse_stmt(p))
+	}
+
+	if len(p.errors) > 0 {
+		fmt.Println("Errors occured during parsing:")
+		for _, err := range p.errors {
+			fmt.Println(err.ToString())
+		}
 	}
 
 	return ast.BlockStmt{
@@ -64,16 +90,29 @@ func (p *parser) currentTokenKind() lexer.TokenKind {
 	return p.currentToken().Kind
 }
 
-func (p *parser) expectError(expected lexer.TokenKind, err any) lexer.Token {
+func (p *parser) addErr(msg string) {
+	token := p.currentToken()
+	position := token.Position
+
+	p.errors = append(p.errors, CreateParserError(msg, position.Line, position.Col))
+}
+
+func (p *parser) panic(msg string) {
+	token := p.currentToken()
+	position := token.Position
+
+	panic(CreateParserError(msg, position.Line, position.Col).ToString())
+}
+
+func (p *parser) expectError(expected lexer.TokenKind, msg any) lexer.Token {
 	token := p.currentToken()
 	kind := token.Kind
 
 	if kind != expected {
-		if err == nil {
-			err = fmt.Sprintf("Expected %s but recieved %s instead\n", expected.ToString(), kind.ToString())
+		if msg == nil {
+			msg = fmt.Sprintf("Expected token %s but recieved %s instead", expected.ToString(), kind.ToString())
 		}
-
-		panic(err)
+		p.addErr(fmt.Sprintf("%v", msg))
 	}
 
 	return p.advance()

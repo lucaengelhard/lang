@@ -60,7 +60,7 @@ func Tokenize(source string) []Token {
 		}
 	}
 
-	lex.push(NewToken(EOF, "EOF", lex.pos))
+	lex.push(NewToken(EOF, "EOF", lex.get_file_pos()))
 	return lex.Tokens
 }
 
@@ -107,33 +107,53 @@ func createLexer(source string) *lexer {
 	}}
 }
 
+func (lex *lexer) get_file_pos() TokenPosition {
+	var line = 1
+	var col = 1
+	for index, r := range lex.source {
+		if index >= lex.pos {
+			break
+		}
+		col++
+		if r == '\n' || r == '\r' {
+			line++
+			col = 0
+		}
+	}
+
+	return TokenPosition{
+		Line: line,
+		Col:  col,
+	}
+}
+
 func defaultHandler(kind TokenKind, value string) regexHandler {
 	return func(lex *lexer, regex *regexp.Regexp) {
 		lex.advanceN(len(value))
-		lex.push(NewToken(kind, value, lex.pos))
+		lex.push(NewToken(kind, value, lex.get_file_pos()))
 	}
 }
 
 func numberHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
-	lex.push(NewToken(NUMBER, match, lex.pos))
+	lex.push(NewToken(NUMBER, match, lex.get_file_pos()))
 	lex.advanceN(len(match))
 }
 
 func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	literal := lex.remainder()[match[0]+1 : match[1]-1]
-	lex.push(NewToken(STRING, literal, lex.pos))
+	lex.push(NewToken(STRING, literal, lex.get_file_pos()))
 	lex.advanceN(len(literal) + 2)
 }
 
 func symbolHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 	if kind, exists := reserved_lu[match]; exists {
-		lex.push(NewToken(kind, match, lex.pos))
+		lex.push(NewToken(kind, match, lex.get_file_pos()))
 	} else {
-		lex.push(NewToken(IDENTIFIER, match, lex.pos))
+		lex.push(NewToken(IDENTIFIER, match, lex.get_file_pos()))
 	}
 
 	lex.advanceN(len(match))

@@ -223,7 +223,7 @@ type TokenPosition struct {
 type Token struct {
 	Kind     TokenKind
 	Value    string
-	Position int
+	Position TokenPosition
 }
 
 func (token Token) is(kinds ...TokenKind) bool {
@@ -238,26 +238,6 @@ func (token Token) Debug() {
 	}
 }
 
-func (token Token) get_file_pos(source string) TokenPosition {
-	var line = 0
-	var col = 0
-	for index, r := range source {
-		if index >= token.Position {
-			break
-		}
-		col++
-		if r == '\n' || r == '\r' {
-			line++
-			col = 0
-		}
-	}
-
-	return TokenPosition{
-		Line: line,
-		Col:  col,
-	}
-}
-
-func NewToken(kind TokenKind, value string, position int) Token {
+func NewToken(kind TokenKind, value string, position TokenPosition) Token {
 	return Token{Kind: kind, Value: value, Position: position}
 }

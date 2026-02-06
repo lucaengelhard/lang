@@ -25,7 +25,7 @@ func parse_declartion_stmt(p *parser) ast.Stmt {
 	var explicitType ast.Type
 
 	isMutable := p.nextIsKind(lexer.MUT)
-	identifier := p.expectError(lexer.IDENTIFIER, "Expected identifier in variable declaration").Value
+	identifier := p.expect(lexer.IDENTIFIER).Value
 
 	if p.currentTokenKind() == lexer.COLON {
 		p.advance()
@@ -69,7 +69,7 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 			_, exists := properties[propertyName]
 
 			if exists {
-				panic(fmt.Sprintf("Property %s already exists on struct %s", propertyName, identifier))
+				p.addErr(fmt.Sprintf("Property %s already exists on struct %s", propertyName, identifier))
 			}
 
 			properties[propertyName] = ast.StructProperty{
@@ -81,7 +81,7 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 			continue
 		}
 
-		panic("This souldn't be reached :( so i wrote bad struct code")
+		p.addErr("This souldn't be reached :( so i wrote bad struct code")
 	}
 
 	p.expect(lexer.CLOSE_CURLY)
@@ -114,7 +114,7 @@ func parse_fm_stmt(p *parser) ast.Stmt {
 		_, exists := arguments[argumentIdentifier]
 
 		if exists {
-			panic(fmt.Sprintf("Argument %s already exists in function %s", argumentIdentifier, identifier))
+			p.addErr(fmt.Sprintf("Argument %s already exists in function %s", argumentIdentifier, identifier))
 		}
 
 		arguments[argumentIdentifier] = ast.FnArg{

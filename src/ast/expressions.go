@@ -20,6 +20,10 @@ type SymbolExpr struct {
 
 func (n SymbolExpr) expr() {}
 
+type UnknowPrimary struct{}
+
+func (n UnknowPrimary) expr() {}
+
 type BinaryExpr struct {
 	Left     Expr
 	Operator lexer.Token

@@ -38,7 +38,7 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 	nud_fn, exists := type_nud_lu[tokenKind]
 
 	if !exists {
-		panic(fmt.Sprintf("Type Nud handler expected for token %s\n", tokenKind.ToString()))
+		p.panic(fmt.Sprintf("Type Nud handler expected for token %s\n", tokenKind.ToString()))
 	}
 
 	left := nud_fn(p)
@@ -48,7 +48,7 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 		led_fn, exists := type_led_lu[tokenKind]
 
 		if !exists {
-			panic(fmt.Sprintf("Type Led handler expected for token %s\n", tokenKind.ToString()))
+			p.panic(fmt.Sprintf("Type Led handler expected for token %s\n", tokenKind.ToString()))
 		}
 
 		left = led_fn(p, left, type_bp_lu[p.currentTokenKind()])

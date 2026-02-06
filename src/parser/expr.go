@@ -14,7 +14,7 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 	nud_fn, exists := nud_lu[tokenKind]
 
 	if !exists {
-		panic(fmt.Sprintf("Nud handler expected for token %s\n", tokenKind.ToString()))
+		p.panic(fmt.Sprintf("Nud handler expected for token %s\n", tokenKind.ToString()))
 	}
 
 	left := nud_fn(p)
@@ -24,7 +24,7 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 		led_fn, exists := led_lu[tokenKind]
 
 		if !exists {
-			panic(fmt.Sprintf("Led handler expected for token %s\n", tokenKind.ToString()))
+			p.panic(fmt.Sprintf("Led handler expected for token %s\n", tokenKind.ToString()))
 		}
 
 		left = led_fn(p, left, bp_lu[p.currentTokenKind()])
@@ -43,7 +43,8 @@ func parse_primary_expr(p *parser) ast.Expr {
 	case lexer.IDENTIFIER:
 		return ast.SymbolExpr{Value: p.advance().Value}
 	default:
-		panic(fmt.Sprintf("Cannot create primaty expression from %s\n", p.currentTokenKind().ToString()))
+		p.addErr(fmt.Sprintf("Cannot create primary expression from %s\n", p.currentTokenKind().ToString()))
+		return ast.UnknowPrimary{}
 	}
 }
 
@@ -88,7 +89,12 @@ func parse_grouping_expr(p *parser) ast.Expr {
 }
 
 func parse_struct_instantiation_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
-	structIdentifier := lib.ExpectType[ast.SymbolExpr](left).Value
+	symbol, err := lib.ExpectType[ast.SymbolExpr](left)
+	structIdentifier := symbol.Value
+
+	if err != nil {
+		p.addErr(err.Error())
+	}
 
 	var properties = map[string]ast.Expr{}
 
@@ -138,7 +144,13 @@ func parse_array_instantiation_expr(p *parser) ast.Expr {
 }
 
 func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
-	identifier := lib.ExpectType[ast.SymbolExpr](left).Value
+	symbol, err := lib.ExpectType[ast.SymbolExpr](left)
+	identifier := symbol.Value
+
+	if err != nil {
+		p.addErr(err.Error())
+	}
+
 	var arguments = []ast.FnCallArg{}
 
 	p.expect(lexer.OPEN_PAREN)
