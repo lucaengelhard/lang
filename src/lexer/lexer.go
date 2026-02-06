@@ -60,15 +60,8 @@ func Tokenize(source string) []Token {
 		}
 	}
 
-	lex.push(NewToken(EOF, "EOF"))
+	lex.push(NewToken(EOF, "EOF", lex.pos))
 	return lex.Tokens
-}
-
-func defaultHandler(kind TokenKind, value string) regexHandler {
-	return func(lex *lexer, regex *regexp.Regexp) {
-		lex.advanceN(len(value))
-		lex.push(NewToken(kind, value))
-	}
 }
 
 func createLexer(source string) *lexer {
@@ -114,26 +107,33 @@ func createLexer(source string) *lexer {
 	}}
 }
 
+func defaultHandler(kind TokenKind, value string) regexHandler {
+	return func(lex *lexer, regex *regexp.Regexp) {
+		lex.advanceN(len(value))
+		lex.push(NewToken(kind, value, lex.pos))
+	}
+}
+
 func numberHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
-	lex.push(NewToken(NUMBER, match))
+	lex.push(NewToken(NUMBER, match, lex.pos))
 	lex.advanceN(len(match))
 }
 
 func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	literal := lex.remainder()[match[0]+1 : match[1]-1]
-	lex.push(NewToken(STRING, literal))
+	lex.push(NewToken(STRING, literal, lex.pos))
 	lex.advanceN(len(literal) + 2)
 }
 
 func symbolHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 	if kind, exists := reserved_lu[match]; exists {
-		lex.push(NewToken(kind, match))
+		lex.push(NewToken(kind, match, lex.pos))
 	} else {
-		lex.push(NewToken(IDENTIFIER, match))
+		lex.push(NewToken(IDENTIFIER, match, lex.pos))
 	}
 
 	lex.advanceN(len(match))

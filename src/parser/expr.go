@@ -148,7 +148,6 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 
 		if p.peekNextKind() == lexer.COLON {
 			argumentIdentifier = p.expect(lexer.IDENTIFIER).Value
-			fmt.Println(argumentIdentifier)
 			p.advance()
 		}
 
