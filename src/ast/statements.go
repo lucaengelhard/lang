@@ -39,6 +39,13 @@ type StructStmt struct {
 
 func (n StructStmt) stmt() {}
 
+type EnumStmt struct {
+	Identifier string
+	Elements   map[string]int
+}
+
+func (n EnumStmt) stmt() {}
+
 type FnArg struct {
 	Identifier string
 	IsMutable  bool

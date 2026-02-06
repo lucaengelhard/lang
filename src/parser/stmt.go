@@ -25,7 +25,7 @@ func parse_stmt(p *parser, with_semicolon ...bool) ast.Stmt {
 	}
 }
 
-func parse_declartion_stmt(p *parser) ast.Stmt {
+func parse_declaration_stmt(p *parser) ast.Stmt {
 	var explicitType ast.Type
 
 	isMutable := p.nextIsKind(lexer.MUT)
@@ -103,6 +103,30 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 		Identifier: identifier,
 		Type:       typeArg,
 		Properties: properties,
+	}
+}
+
+func parse_enum_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.ENUM)
+	identifier := p.expect(lexer.IDENTIFIER).Value
+	var elements = map[string]int{}
+
+	p.expect(lexer.OPEN_CURLY)
+
+	var iota = 0
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+		elements[p.expect(lexer.IDENTIFIER).Value] = iota
+		iota++
+		if p.currentTokenKind() != lexer.CLOSE_CURLY {
+			p.expect(lexer.COMMA)
+		}
+	}
+
+	p.expect(lexer.CLOSE_CURLY)
+
+	return ast.EnumStmt{
+		Identifier: identifier,
+		Elements:   elements,
 	}
 }
 
