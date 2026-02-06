@@ -6,6 +6,13 @@ type SymbolType struct {
 
 func (t SymbolType) _type() {}
 
+type FnType struct {
+	Arguments  map[string]FnArg
+	ReturnType Type
+}
+
+func (t FnType) _type() {}
+
 type GenericType struct {
 	Identifier string
 	Arguments  []Type

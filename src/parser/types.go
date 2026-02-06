@@ -31,6 +31,7 @@ func type_nud(kind lexer.TokenKind, nud_fn type_nud_handler) {
 
 func createTokenTypeLookups() {
 	type_nud(lexer.IDENTIFIER, parse_symbol_type)
+	type_nud(lexer.OPEN_PAREN, parse_fn_type)
 	type_led(lexer.LESS, call, parse_generic_type)
 	type_led(lexer.IS, logical, parse_is_type)
 }
@@ -88,6 +89,56 @@ func parse_generic_type(p *parser, left ast.Type, bp binding_power) ast.Type {
 	return ast.GenericType{
 		Identifier: identifier,
 		Arguments:  arguments,
+	}
+}
+
+func parse_fn_type(p *parser) ast.Type {
+	var arguments = map[string]ast.FnArg{}
+
+	p.expect(lexer.OPEN_PAREN)
+
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
+		var explicitType ast.Type
+		isMutable := p.currentTokenKind() == lexer.MUT
+		if isMutable {
+			p.advance()
+		}
+
+		argumentIdentifier := p.expect(lexer.IDENTIFIER).Value
+		if p.currentTokenKind() == lexer.COLON {
+			p.advance()
+			explicitType = parse_type(p, default_bp)
+		}
+
+		_, exists := arguments[argumentIdentifier]
+
+		if exists {
+			p.addErr(fmt.Sprintf("Argument %s already exists in function type", argumentIdentifier))
+		}
+
+		arguments[argumentIdentifier] = ast.FnArg{
+			Identifier: argumentIdentifier,
+			IsMutable:  isMutable,
+			Type:       explicitType,
+		}
+
+		if p.currentTokenKind() != lexer.CLOSE_PAREN {
+			p.expect(lexer.COMMA)
+		}
+	}
+
+	p.expect(lexer.CLOSE_PAREN)
+
+	var returnType ast.Type
+
+	if p.currentTokenKind() == lexer.R_ARROW {
+		p.advance()
+		returnType = parse_type(p, default_bp)
+	}
+
+	return ast.FnType{
+		Arguments:  arguments,
+		ReturnType: returnType,
 	}
 }
 
