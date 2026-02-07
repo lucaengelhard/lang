@@ -39,6 +39,7 @@ const (
 	COMMA
 	COLON
 	QUESTION
+	SPREAD
 
 	PLUS_PLUS
 	MINUS_MINUS
@@ -141,6 +142,7 @@ var token_string_lu map[TokenKind]string = map[TokenKind]string{
 	PERCENT:        "percent",
 	R_ARROW:        "right_arrow",
 	L_ARROW:        "left_arrow",
+	SPREAD:         "spread",
 }
 
 func InitTokenLookup() {

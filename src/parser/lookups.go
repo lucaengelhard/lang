@@ -69,6 +69,7 @@ func createTokenLookups() {
 	led(lexer.PERCENT, multiplicative, parse_binary_expr)
 
 	led(lexer.DOT, primary, parse_chain_expr)
+	nud(lexer.SPREAD, parser_prefix_expr)
 
 	led(lexer.ASSIGNMENT, assignment, parse_assignment_expr)
 	led(lexer.PLUS_EQUALS, assignment, parse_assignment_expr)
