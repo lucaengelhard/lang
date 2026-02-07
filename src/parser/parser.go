@@ -40,13 +40,9 @@ func createParser(tokens []lexer.Token) *parser {
 }
 
 func Parse(tokens []lexer.Token) ast.BlockStmt {
-	body := make([]ast.Stmt, 0)
-
 	p := createParser(tokens)
 
-	for p.hasTokens() {
-		body = append(body, parse_stmt(p))
-	}
+	body := parse_block_stmt(p)
 
 	if len(p.errors) > 0 {
 		fmt.Println("Errors occured during parsing:")
@@ -55,9 +51,7 @@ func Parse(tokens []lexer.Token) ast.BlockStmt {
 		}
 	}
 
-	return ast.BlockStmt{
-		Body: body,
-	}
+	return body
 }
 
 func (p *parser) currentToken() lexer.Token {

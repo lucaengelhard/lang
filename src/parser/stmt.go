@@ -25,6 +25,18 @@ func parse_stmt(p *parser, with_semicolon ...bool) ast.Stmt {
 	}
 }
 
+func parse_block_stmt(p *parser) ast.BlockStmt {
+	body := make([]ast.Stmt, 0)
+
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+		body = append(body, parse_stmt(p))
+	}
+
+	return ast.BlockStmt{
+		Body: body,
+	}
+}
+
 func parse_declaration_stmt(p *parser) ast.Stmt {
 	var explicitType ast.Type
 
@@ -175,24 +187,15 @@ func parse_if_stmt(p *parser) ast.Stmt {
 	cond := parse_expr(p, assignment)
 	p.expect(lexer.CLOSE_PAREN)
 
-	true_stmt := make([]ast.Stmt, 0)
-	false_stmt := make([]ast.Stmt, 0)
+	var false_stmt ast.BlockStmt
 
 	p.expect(lexer.OPEN_CURLY)
-
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		true_stmt = append(true_stmt, parse_stmt(p))
-	}
+	true_stmt := parse_block_stmt(p)
 	p.expect(lexer.CLOSE_CURLY)
-
 	if p.currentTokenKind() == lexer.ELSE {
 		p.advance()
 		p.expect(lexer.OPEN_CURLY)
-
-		for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-			false_stmt = append(true_stmt, parse_stmt(p))
-		}
-
+		false_stmt = parse_block_stmt(p)
 		p.expect(lexer.CLOSE_CURLY)
 	}
 
@@ -210,10 +213,7 @@ func parse_while_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.CLOSE_PAREN)
 
 	p.expect(lexer.OPEN_CURLY)
-	body := make([]ast.Stmt, 0)
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		body = append(body, parse_stmt(p))
-	}
+	body := parse_block_stmt(p)
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.WhileStmt{
@@ -231,10 +231,7 @@ func parse_for_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.CLOSE_PAREN)
 
 	p.expect(lexer.OPEN_CURLY)
-	body := make([]ast.Stmt, 0)
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		body = append(body, parse_stmt(p))
-	}
+	body := parse_block_stmt(p)
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.ForStmt{

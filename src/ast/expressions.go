@@ -101,7 +101,7 @@ type FnDeclareExpr struct {
 	Arguments  map[string]FnArg
 	Type       Type
 	ReturnType Type
-	Body       []Stmt
+	Body       BlockStmt
 }
 
 func (n FnDeclareExpr) expr() {}

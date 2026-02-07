@@ -241,13 +241,9 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		returnType = parse_type(p, default_bp)
 	}
 
-	body := make([]ast.Stmt, 0)
-
 	p.expect(lexer.OPEN_CURLY)
 
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		body = append(body, parse_stmt(p))
-	}
+	body := parse_block_stmt(p)
 
 	p.expect(lexer.CLOSE_CURLY)
 

@@ -63,15 +63,15 @@ type FnArg struct {
 
 type IfStmt struct {
 	Condition Expr
-	True      []Stmt
-	False     []Stmt
+	True      BlockStmt
+	False     BlockStmt
 }
 
 func (n IfStmt) stmt() {}
 
 type WhileStmt struct {
 	Condition Expr
-	Body      []Stmt
+	Body      BlockStmt
 }
 
 func (n WhileStmt) stmt() {}
@@ -80,7 +80,7 @@ type ForStmt struct {
 	Assignment Stmt
 	Condition  Stmt
 	Increment  Stmt
-	Body       []Stmt
+	Body       BlockStmt
 }
 
 func (n ForStmt) stmt() {}
