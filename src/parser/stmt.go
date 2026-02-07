@@ -60,21 +60,8 @@ func parse_declaration_stmt(p *parser) ast.Stmt {
 	}
 }
 
-func parse_struct_stmt(p *parser) ast.Stmt {
-	p.expect(lexer.STRUCT)
-	identifier := p.expect(lexer.IDENTIFIER).Value
-	var typeArg ast.Type
+func parse_struct_properties(p *parser) map[string]ast.StructProperty {
 	var properties = map[string]ast.StructProperty{}
-
-	if p.currentTokenKind() == lexer.LESS {
-		p.advance()
-
-		typeArg = parse_type(p, default_bp)
-
-		p.expect(lexer.GREATER)
-	}
-
-	p.expect(lexer.OPEN_CURLY)
 
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
 		if p.currentTokenKind() == lexer.IDENTIFIER || lexer.IsReserved(p.currentToken().Value) {
@@ -94,7 +81,7 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 			_, exists := properties[propertyName]
 
 			if exists {
-				p.addErr(fmt.Sprintf("Property %s already exists on struct %s", propertyName, identifier))
+				p.addErr(fmt.Sprintf("Property %s already exists on struct", propertyName))
 			}
 
 			properties[propertyName] = ast.StructProperty{
@@ -109,6 +96,24 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 		p.addErr("This souldn't be reached :( so i wrote bad struct code")
 	}
 
+	return properties
+}
+
+func parse_struct_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.STRUCT)
+	identifier := p.expect(lexer.IDENTIFIER).Value
+	var typeArg ast.Type
+
+	if p.currentTokenKind() == lexer.LESS {
+		p.advance()
+
+		typeArg = parse_type(p, default_bp)
+
+		p.expect(lexer.GREATER)
+	}
+
+	p.expect(lexer.OPEN_CURLY)
+	properties := parse_struct_properties(p)
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.StructStmt{
@@ -140,9 +145,14 @@ func parse_interface_stmt(p *parser) ast.Stmt {
 		}
 	}
 
+	p.expect(lexer.OPEN_CURLY)
+	structType := parse_struct_properties(p)
+	p.expect(lexer.CLOSE_CURLY)
+
 	return ast.InterfaceStmt{
 		Identifier: identifier,
 		TypeArg:    typeArg,
+		StructType: structType,
 	}
 }
 

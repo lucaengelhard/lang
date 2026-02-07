@@ -43,7 +43,7 @@ type InterfaceStmt struct {
 	Identifier string
 	TypeArg    Type
 	SingleType Type
-	StructType StructStmt
+	StructType map[string]StructProperty
 }
 
 func (n InterfaceStmt) stmt() {}
