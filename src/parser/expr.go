@@ -10,11 +10,12 @@ import (
 )
 
 func parse_expr(p *parser, bp binding_power) ast.Expr {
-	tokenKind := p.currentTokenKind()
+	token := p.currentToken()
+	tokenKind := token.Kind
 	nud_fn, exists := nud_lu[tokenKind]
 
 	if !exists {
-		p.panic(fmt.Sprintf("Nud handler expected for token %s\n", tokenKind.ToString()))
+		p.panic(fmt.Sprintf("Unexpected token (nud): %s (%s)\n", tokenKind.ToString(), token.Value))
 	}
 
 	left := nud_fn(p)
@@ -24,7 +25,7 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 		led_fn, exists := led_lu[tokenKind]
 
 		if !exists {
-			p.panic(fmt.Sprintf("Led handler expected for token %s\n", tokenKind.ToString()))
+			p.panic(fmt.Sprintf("Unexpected token (led): %s (%s)\n", tokenKind.ToString(), token.Value))
 		}
 
 		left = led_fn(p, left, bp_lu[p.currentTokenKind()])
