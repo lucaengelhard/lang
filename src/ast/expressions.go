@@ -52,12 +52,19 @@ type PrefixExpr struct {
 func (n PrefixExpr) expr() {}
 
 type AssignmentExpr struct {
-	Assigne   Expr
+	Assignee  Expr
 	Operator  lexer.Token
 	RightExpr Expr
 }
 
 func (n AssignmentExpr) expr() {}
+
+type ChainExpr struct {
+	Assignee Expr
+	Member   Expr
+}
+
+func (n ChainExpr) expr() {}
 
 type StructInstantiationExpr struct {
 	StructIdentifier string

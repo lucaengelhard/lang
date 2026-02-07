@@ -187,12 +187,12 @@ type Token struct {
 	Position TokenPosition
 }
 
-func (token Token) is(kinds ...TokenKind) bool {
+func (token Token) Is(kinds ...TokenKind) bool {
 	return slices.Contains(kinds, token.Kind)
 }
 
 func (token Token) Debug() {
-	if token.is(IDENTIFIER, NUMBER, STRING) {
+	if token.Is(IDENTIFIER, NUMBER, STRING) {
 		fmt.Printf("%s (%s)\n", token.Kind.ToString(), token.Value)
 	} else {
 		fmt.Printf("%s ()\n", token.Kind.ToString())

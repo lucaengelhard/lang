@@ -75,7 +75,7 @@ func parse_assignment_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr 
 	return ast.AssignmentExpr{
 		Operator:  operator,
 		RightExpr: rightExpr,
-		Assigne:   left,
+		Assignee:  left,
 	}
 }
 
@@ -261,5 +261,23 @@ func parse_fn_declare_expr(p *parser, identifier string) ast.Expr {
 		Type:       typeArg,
 		ReturnType: returnType,
 		Body:       body,
+	}
+}
+
+func parse_chain_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	p.expect(lexer.DOT)
+	identifierToken := p.expect(lexer.IDENTIFIER)
+	identifierExpr := ast.SymbolExpr{Value: identifierToken.Value}
+
+	if p.currentTokenKind() == lexer.OPEN_PAREN {
+		return ast.ChainExpr{
+			Assignee: left,
+			Member:   parse_fn_call_expr(p, identifierExpr, logical),
+		}
+	}
+
+	return ast.ChainExpr{
+		Assignee: left,
+		Member:   identifierExpr,
 	}
 }

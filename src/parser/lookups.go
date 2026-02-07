@@ -67,6 +67,8 @@ func createTokenLookups() {
 	led(lexer.SLASH, multiplicative, parse_binary_expr)
 	led(lexer.PERCENT, multiplicative, parse_binary_expr)
 
+	led(lexer.DOT, primary, parse_chain_expr)
+
 	led(lexer.ASSIGNMENT, assignment, parse_assignment_expr)
 	led(lexer.PLUS_EQUALS, assignment, parse_assignment_expr)
 	led(lexer.MINUS_EQUALS, assignment, parse_assignment_expr)
@@ -79,7 +81,7 @@ func createTokenLookups() {
 
 	led(lexer.OPEN_CURLY, call, parse_struct_instantiation_expr)
 	led(lexer.OPEN_PAREN, call, parse_fn_call_expr)
-	nud(lexer.OPEN_PAREN, parse_fn_declare_expr_nud)
+	//nud(lexer.OPEN_PAREN, parse_fn_declare_expr_nud) // TODO: Fix anonymous functions
 	nud(lexer.LESS, parse_fn_declare_expr_nud)
 	nud(lexer.OPEN_BRACKET, parse_array_instantiation_expr)
 
