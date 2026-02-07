@@ -39,6 +39,15 @@ type StructStmt struct {
 
 func (n StructStmt) stmt() {}
 
+type InterfaceStmt struct {
+	Identifier string
+	TypeArg    Type
+	SingleType Type
+	StructType StructStmt
+}
+
+func (n InterfaceStmt) stmt() {}
+
 type EnumStmt struct {
 	Identifier string
 	Elements   map[string]int

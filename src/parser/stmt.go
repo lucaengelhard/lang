@@ -106,6 +106,34 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 	}
 }
 
+func parse_interface_stmt(p *parser) ast.Stmt {
+	p.expect(lexer.INTERFACE)
+	identifier := p.expect(lexer.IDENTIFIER).Value
+	var typeArg ast.Type
+
+	if p.currentTokenKind() == lexer.LESS {
+		p.advance()
+
+		typeArg = parse_type(p, default_bp)
+
+		p.expect(lexer.GREATER)
+	}
+
+	if p.currentTokenKind() == lexer.ASSIGNMENT {
+		p.advance()
+		return ast.InterfaceStmt{
+			Identifier: identifier,
+			TypeArg:    typeArg,
+			SingleType: parse_type(p, default_bp),
+		}
+	}
+
+	return ast.InterfaceStmt{
+		Identifier: identifier,
+		TypeArg:    typeArg,
+	}
+}
+
 func parse_enum_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.ENUM)
 	identifier := p.expect(lexer.IDENTIFIER).Value

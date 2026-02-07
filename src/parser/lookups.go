@@ -89,6 +89,7 @@ func createTokenLookups() {
 
 	stmt(lexer.LET, parse_declaration_stmt)
 	stmt(lexer.STRUCT, parse_struct_stmt)
+	stmt(lexer.INTERFACE, parse_interface_stmt)
 	stmt(lexer.ENUM, parse_enum_stmt)
 	stmt(lexer.FN, parse_fn_stmt)
 	stmt(lexer.IF, parse_if_stmt)
