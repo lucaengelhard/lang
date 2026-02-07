@@ -80,9 +80,9 @@ func parse_assignment_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr 
 	rightExpr := parse_expr(p, bp)
 
 	return ast.AssignmentExpr{
-		Operator:  operator,
-		RightExpr: rightExpr,
-		Assignee:  left,
+		Operator: operator,
+		Right:    rightExpr,
+		Assignee: left,
 	}
 }
 
@@ -91,8 +91,17 @@ func parser_prefix_expr(p *parser) ast.Expr {
 	rightExpr := parse_expr(p, default_bp)
 
 	return ast.PrefixExpr{
-		Operator:  operator,
-		RightExpr: rightExpr,
+		Operator: operator,
+		Right:    rightExpr,
+	}
+}
+
+func parse_postfix_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	operator := p.advance()
+
+	return ast.PostfixExpr{
+		Left:     left,
+		Operator: operator,
 	}
 }
 
