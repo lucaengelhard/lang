@@ -52,6 +52,12 @@ func parse_primary_expr(p *parser) ast.Expr {
 		return ast.StringExpr{Value: p.advance().Value}
 	case lexer.IDENTIFIER:
 		return ast.SymbolExpr{Value: p.advance().Value}
+	case lexer.TRUE:
+		p.advance()
+		return ast.BoolExpr{Value: true}
+	case lexer.FALSE:
+		p.advance()
+		return ast.BoolExpr{Value: false}
 	default:
 		p.addErr(fmt.Sprintf("Cannot create primary expression from %s\n", p.currentTokenKind().ToString()))
 		return ast.UnknowPrimary{}

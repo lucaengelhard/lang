@@ -14,6 +14,12 @@ type IntExpr struct {
 
 func (n IntExpr) expr() {}
 
+type BoolExpr struct {
+	Value bool
+}
+
+func (n BoolExpr) expr() {}
+
 type FloatExpr struct {
 	Value float64
 }
