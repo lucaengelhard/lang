@@ -154,13 +154,6 @@ func parse_array_instantiation_expr(p *parser) ast.Expr {
 }
 
 func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
-	/* symbol, err := lib.ExpectType[ast.SymbolExpr](left)
-	identifier := symbol.Value
-
-	if err != nil {
-		p.addErr(err.Error())
-	} */
-
 	var arguments = []ast.FnCallArg{}
 
 	p.expect(lexer.OPEN_PAREN)
