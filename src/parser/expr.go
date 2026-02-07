@@ -186,7 +186,7 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 	}
 }
 
-func parse_fn_declare_expr_nud(p *parser) ast.Expr {
+func parse_fn_declare_anonymous_expr(p *parser) ast.Expr {
 	p.expect(lexer.FN)
 	return parse_fn_declare_expr(p, "")
 }
