@@ -263,3 +263,13 @@ func parse_chain_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 		Member:   parse_expr(p, default_bp),
 	}
 }
+
+func parse_is_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	p.expect(lexer.IS)
+	right := parse_type(p, bp)
+
+	return ast.IsTypeExpr{
+		Left:  left,
+		Right: right,
+	}
+}

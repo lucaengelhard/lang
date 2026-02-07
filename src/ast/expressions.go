@@ -105,3 +105,10 @@ type FnDeclareExpr struct {
 }
 
 func (n FnDeclareExpr) expr() {}
+
+type IsTypeExpr struct {
+	Left  Expr
+	Right Type
+}
+
+func (n IsTypeExpr) expr() {}

@@ -60,6 +60,7 @@ func createTokenLookups() {
 	led(lexer.GREATER_EQUALS, relational, parse_binary_expr)
 	led(lexer.EQUALS, relational, parse_binary_expr)
 	led(lexer.NOT_EQUALS, relational, parse_binary_expr)
+	led(lexer.IS, relational, parse_is_expr)
 
 	led(lexer.PLUS, additive, parse_binary_expr)
 	led(lexer.MINUS, additive, parse_binary_expr)
