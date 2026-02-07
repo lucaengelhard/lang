@@ -132,12 +132,12 @@ func parse_enum_stmt(p *parser) ast.Stmt {
 
 func parse_fn_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.FN)
-	identifier := p.expect(lexer.IDENTIFIER).Value
+	identifier := p.expect(lexer.IDENTIFIER)
 
 	return ast.DeclarationStmt{
-		Identifier:    identifier,
+		Identifier:    identifier.Value,
 		IsMutable:     false,
-		AssignedValue: parse_fn_declare_expr(p, identifier),
+		AssignedValue: parse_fn_declare_expr(p),
 	}
 }
 

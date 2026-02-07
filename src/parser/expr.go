@@ -188,9 +188,9 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 
 func parse_fn_declare_anonymous_expr(p *parser) ast.Expr {
 	p.expect(lexer.FN)
-	return parse_fn_declare_expr(p, "")
+	return parse_fn_declare_expr(p)
 }
-func parse_fn_declare_expr(p *parser, identifier string) ast.Expr {
+func parse_fn_declare_expr(p *parser) ast.Expr {
 	var arguments = map[string]ast.FnArg{}
 	var typeArg ast.Type
 
@@ -218,7 +218,7 @@ func parse_fn_declare_expr(p *parser, identifier string) ast.Expr {
 		_, exists := arguments[argumentIdentifier]
 
 		if exists {
-			p.addErr(fmt.Sprintf("Argument %s already exists in function %s", argumentIdentifier, identifier))
+			p.addErr(fmt.Sprintf("Argument %s already exists in function", argumentIdentifier))
 		}
 
 		arguments[argumentIdentifier] = ast.FnArg{
