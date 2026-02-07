@@ -86,8 +86,8 @@ type FnCallArg struct {
 }
 
 type FnCallExpr struct {
-	Identifier string
-	Arguments  []FnCallArg
+	Caller    Expr
+	Arguments []FnCallArg
 }
 
 func (n FnCallExpr) expr() {}

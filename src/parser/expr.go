@@ -154,12 +154,12 @@ func parse_array_instantiation_expr(p *parser) ast.Expr {
 }
 
 func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
-	symbol, err := lib.ExpectType[ast.SymbolExpr](left)
+	/* symbol, err := lib.ExpectType[ast.SymbolExpr](left)
 	identifier := symbol.Value
 
 	if err != nil {
 		p.addErr(err.Error())
-	}
+	} */
 
 	var arguments = []ast.FnCallArg{}
 
@@ -188,8 +188,8 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 	p.expect(lexer.CLOSE_PAREN)
 
 	return ast.FnCallExpr{
-		Identifier: identifier,
-		Arguments:  arguments,
+		Caller:    left,
+		Arguments: arguments,
 	}
 }
 
@@ -267,18 +267,9 @@ func parse_fn_declare_expr(p *parser, identifier string) ast.Expr {
 
 func parse_chain_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 	p.expect(lexer.DOT)
-	identifierToken := p.expect(lexer.IDENTIFIER)
-	identifierExpr := ast.SymbolExpr{Value: identifierToken.Value}
-
-	if p.currentTokenKind() == lexer.OPEN_PAREN {
-		return ast.ChainExpr{
-			Assignee: left,
-			Member:   parse_fn_call_expr(p, identifierExpr, logical),
-		}
-	}
 
 	return ast.ChainExpr{
 		Assignee: left,
-		Member:   identifierExpr,
+		Member:   parse_expr(p, default_bp),
 	}
 }
