@@ -130,25 +130,19 @@ func parse_struct_instantiation_expr(p *parser, left ast.Expr, bp binding_power)
 	}
 }
 
-// TODO: Change syntax to [number][10] or something similar
 func parse_array_instantiation_expr(p *parser) ast.Expr {
-	var elements = []ast.Expr{}
-
 	p.expect(lexer.OPEN_BRACKET)
-	p.expect(lexer.CLOSE_BRACKET)
-
-	arrayType := parse_type(p, default_bp)
-
-	p.expect(lexer.OPEN_CURLY)
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+	var elements = []ast.Expr{}
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_BRACKET {
 		elements = append(elements, parse_expr(p, logical))
-		if p.currentTokenKind() != lexer.CLOSE_CURLY {
+		if p.currentTokenKind() != lexer.CLOSE_BRACKET {
 			p.expect(lexer.COMMA)
 		}
 	}
-	p.expect(lexer.CLOSE_CURLY)
+
+	p.expect(lexer.CLOSE_BRACKET)
+
 	return ast.ArrayInstantiationExpr{
-		Type:     arrayType,
 		Elements: elements,
 	}
 }

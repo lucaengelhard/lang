@@ -74,7 +74,6 @@ type StructInstantiationExpr struct {
 func (n StructInstantiationExpr) expr() {}
 
 type ArrayInstantiationExpr struct {
-	Type     Type
 	Elements []Expr
 }
 

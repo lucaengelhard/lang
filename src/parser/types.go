@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
@@ -31,6 +32,8 @@ func type_nud(kind lexer.TokenKind, nud_fn type_nud_handler) {
 
 func createTokenTypeLookups() {
 	type_nud(lexer.IDENTIFIER, parse_symbol_type)
+	type_nud(lexer.NUMBER, parse_number_type)
+	type_nud(lexer.STRING, parse_string_type)
 	type_nud(lexer.OPEN_PAREN, parse_fn_type)
 	type_led(lexer.LESS, call, parse_generic_type)
 	type_led(lexer.IS, logical, parse_is_type)
@@ -62,6 +65,22 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 
 func parse_symbol_type(p *parser) ast.Type {
 	return ast.SymbolType{Value: p.expect(lexer.IDENTIFIER).Value}
+}
+
+func parse_string_type(p *parser) ast.Type {
+	return ast.StringLiteralType{Value: p.expect(lexer.STRING).Value}
+}
+
+func parse_number_type(p *parser) ast.Type {
+	val := p.expect(lexer.NUMBER).Value
+	if i, err := strconv.ParseInt(val, 10, 64); err == nil {
+		return ast.IntLiteralType{
+			Value: i,
+		}
+	}
+
+	p.addErr(fmt.Sprintf("Only integers allowed in Number Types %s", val))
+	return ast.UnkownType{}
 }
 
 func parse_generic_type(p *parser, left ast.Type, bp binding_power) ast.Type {

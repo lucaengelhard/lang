@@ -6,6 +6,18 @@ type SymbolType struct {
 
 func (t SymbolType) _type() {}
 
+type IntLiteralType struct {
+	Value int64
+}
+
+func (t IntLiteralType) _type() {}
+
+type StringLiteralType struct {
+	Value string
+}
+
+func (t StringLiteralType) _type() {}
+
 type FnType struct {
 	Arguments  map[string]FnArg
 	ReturnType Type
@@ -26,3 +38,7 @@ type IsType struct {
 }
 
 func (t IsType) _type() {}
+
+type UnkownType struct{}
+
+func (t UnkownType) _type() {}
