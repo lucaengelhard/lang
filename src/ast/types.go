@@ -42,3 +42,9 @@ func (t IsType) _type() {}
 type UnkownType struct{}
 
 func (t UnkownType) _type() {}
+
+type BlockType struct {
+	Body []Type
+}
+
+func (t BlockType) _type() {}
