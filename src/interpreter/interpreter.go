@@ -60,7 +60,7 @@ func interpret(node any, env *env) any {
 	case ast.BinaryExpr:
 		result = interpret_binary_exp(node, env)
 	case ast.AssignmentExpr:
-
+		interpret_assignment(node, env)
 	default:
 		fmt.Printf("Unhandled: %s\n", reflect.TypeOf(node))
 	}
@@ -85,9 +85,23 @@ func interpret_declaration(input any, env *env) {
 }
 
 func interpret_assignment(input any, env *env) {
-	d, _ := lib.ExpectType[ast.DeclarationStmt](input)
+	assignment, _ := lib.ExpectType[ast.AssignmentExpr](input)
+	assignee, _ := lib.ExpectType[ast.SymbolExpr](assignment.Assignee)
+	right_result := interpret(assignment.Right, env)
 
-	env.Declarations[d.Identifier] = interpret(d.AssignedValue, env)
+	current, exists := env.Declarations[assignee.Value]
+
+	if !exists {
+		panic(fmt.Sprintf("Variable %s doesn't exist in the current scope\n", assignee.Value))
+	}
+
+	alternative_op, alt_exists := assign_lu[assignment.Operator.Kind]
+
+	if alt_exists {
+		env.Declarations[assignee.Value] = execute_op(alternative_op, current, right_result)
+	} else {
+		env.Declarations[assignee.Value] = right_result
+	}
 }
 
 func interpret_symbol_expr(input any, env *env) any {
