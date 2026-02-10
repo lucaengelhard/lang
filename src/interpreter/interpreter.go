@@ -5,7 +5,9 @@ import (
 	"reflect"
 
 	"github.com/lucaengelhard/lang/src/ast"
+	"github.com/lucaengelhard/lang/src/lexer"
 	"github.com/lucaengelhard/lang/src/lib"
+	"github.com/sanity-io/litter"
 )
 
 type env struct {
@@ -61,8 +63,12 @@ func interpret(node any, env *env) any {
 		result = interpret_binary_exp(node, env)
 	case ast.AssignmentExpr:
 		interpret_assignment(node, env)
+	case ast.PrefixExpr:
+		result = interpret_prefix_expr(node, env)
 	default:
 		fmt.Printf("Unhandled: %s\n", reflect.TypeOf(node))
+		litter.Dump(node)
+
 	}
 
 	fmt.Println(result)
@@ -98,7 +104,7 @@ func interpret_assignment(input any, env *env) {
 	op_token, op_token_exists := assignment_operation_lu[assignment.Operator.Kind]
 
 	if op_token_exists {
-		env.Declarations[assignee.Value] = execute_op(op_token, current, right_result)
+		env.Declarations[assignee.Value] = execute_binop(op_token, current, right_result)
 	} else {
 		env.Declarations[assignee.Value] = right_result
 	}
@@ -114,5 +120,19 @@ func interpret_binary_exp(input any, env *env) any {
 	expression, _ := lib.ExpectType[ast.BinaryExpr](input)
 	left_result := interpret(expression.Left, env)
 	right_esult := interpret(expression.Right, env)
-	return execute_op(expression.Operator.Kind, left_result, right_esult)
+	return execute_binop(expression.Operator.Kind, left_result, right_esult)
+}
+
+func interpret_prefix_expr(input any, env *env) any {
+	expression, _ := lib.ExpectType[ast.PrefixExpr](input)
+	right_result := interpret(expression.Right, env)
+
+	switch expression.Operator.Kind {
+	case lexer.MINUS:
+		return execute_binop(lexer.STAR, int64(-1), right_result)
+
+	default:
+		fmt.Printf("Unhandled prefix: %s\n", expression.Operator.Kind.ToString())
+		return nil
+	}
 }

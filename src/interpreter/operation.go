@@ -8,26 +8,26 @@ import (
 	"github.com/lucaengelhard/lang/src/lib"
 )
 
-type operation func(l, r any) any
-type op_lookup map[lexer.TokenKind]map[reflect.Type]map[reflect.Type]operation
+type binop func(l, r any) any
+type binop_lookup map[lexer.TokenKind]map[reflect.Type]map[reflect.Type]binop
 
-var op_lu = op_lookup{}
+var binop_lu = binop_lookup{}
 var assignment_operation_lu = map[lexer.TokenKind]lexer.TokenKind{}
 
-func create_op[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R) Ret) {
-	_, tk_map_exists := op_lu[token]
+func create_binop[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R) Ret) {
+	_, tk_map_exists := binop_lu[token]
 
 	if !tk_map_exists {
-		op_lu[token] = map[reflect.Type]map[reflect.Type]operation{}
+		binop_lu[token] = map[reflect.Type]map[reflect.Type]binop{}
 	}
 
-	_, l_map_exists := op_lu[token][reflect.TypeFor[L]()]
+	_, l_map_exists := binop_lu[token][reflect.TypeFor[L]()]
 
 	if !l_map_exists {
-		op_lu[token][reflect.TypeFor[L]()] = map[reflect.Type]operation{}
+		binop_lu[token][reflect.TypeFor[L]()] = map[reflect.Type]binop{}
 	}
 
-	op_lu[token][reflect.TypeFor[L]()][reflect.TypeFor[R]()] = func(l, r any) any {
+	binop_lu[token][reflect.TypeFor[L]()][reflect.TypeFor[R]()] = func(l, r any) any {
 		valid_l, _ := lib.ExpectType[L](l)
 		valid_r, _ := lib.ExpectType[R](r)
 
@@ -35,9 +35,9 @@ func create_op[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R) R
 	}
 }
 
-func get_op(token lexer.TokenKind, left any, right any) operation {
+func get_op(token lexer.TokenKind, left any, right any) binop {
 	err_str := fmt.Sprintf("No operation for %s and %s\n", reflect.TypeOf(left), reflect.TypeOf(right))
-	tk, exists_tk := op_lu[token]
+	tk, exists_tk := binop_lu[token]
 
 	if !exists_tk {
 		panic(err_str)
@@ -58,20 +58,20 @@ func get_op(token lexer.TokenKind, left any, right any) operation {
 	return op
 }
 
-func execute_op(token lexer.TokenKind, left any, right any) any {
+func execute_binop(token lexer.TokenKind, left any, right any) any {
 	return get_op(token, left, right)(left, right)
 }
 
 func createOpLookup() {
-	create_op(lexer.PLUS, int_add)
-	with_cast(lexer.PLUS, float_add, int_to_float)
-	create_op(lexer.MINUS, int_sub)
-	with_cast(lexer.MINUS, float_minus, int_to_float)
-	create_op(lexer.STAR, int_mult)
-	with_cast(lexer.STAR, float_mult, int_to_float)
-	create_op(lexer.SLASH, int_div)
-	with_cast(lexer.SLASH, float_div, int_to_float)
-	create_op(lexer.PERCENT, int_mod)
+	create_binop(lexer.PLUS, int_add)
+	create_binop_with_cast(lexer.PLUS, float_add, int_to_float)
+	create_binop(lexer.MINUS, int_sub)
+	create_binop_with_cast(lexer.MINUS, float_minus, int_to_float)
+	create_binop(lexer.STAR, int_mult)
+	create_binop_with_cast(lexer.STAR, float_mult, int_to_float)
+	create_binop(lexer.SLASH, int_div)
+	create_binop_with_cast(lexer.SLASH, float_div, int_to_float)
+	create_binop(lexer.PERCENT, int_mod)
 
 	assignment_operation_lu[lexer.PLUS_EQUALS] = lexer.PLUS
 	assignment_operation_lu[lexer.MINUS_EQUALS] = lexer.MINUS
@@ -119,7 +119,7 @@ func int_to_float(input int64) float64 {
 	return float64(input)
 }
 
-func with_cast[From any, To any](token lexer.TokenKind, op func(l To, r To) To, cast func(f From) To) {
+func create_binop_with_cast[From any, To any](token lexer.TokenKind, op func(l To, r To) To, cast func(f From) To) {
 	no_cast := func(l To, r To) To {
 		return op(l, r)
 	}
@@ -131,7 +131,7 @@ func with_cast[From any, To any](token lexer.TokenKind, op func(l To, r To) To, 
 	right := func(l To, r From) To {
 		return op(l, cast(r))
 	}
-	create_op(token, no_cast)
-	create_op(token, left)
-	create_op(token, right)
+	create_binop(token, no_cast)
+	create_binop(token, left)
+	create_binop(token, right)
 }
