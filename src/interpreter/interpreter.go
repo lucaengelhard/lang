@@ -59,6 +59,8 @@ func interpret(node any, env *env) any {
 		result = i.Value
 	case ast.BinaryExpr:
 		result = interpret_binary_exp(node, env)
+	case ast.AssignmentExpr:
+
 	default:
 		fmt.Printf("Unhandled: %s\n", reflect.TypeOf(node))
 	}
@@ -68,29 +70,35 @@ func interpret(node any, env *env) any {
 	return result
 }
 
-func interpret_block(block any, env *env) {
-	b, _ := lib.ExpectType[ast.BlockStmt](block)
+func interpret_block(input any, env *env) {
+	block, _ := lib.ExpectType[ast.BlockStmt](input)
 	scope := createEnv(env)
-	for _, stmt := range b.Body {
+	for _, stmt := range block.Body {
 		interpret(stmt, scope)
 	}
 }
 
-func interpret_declaration(decl any, env *env) {
-	d, _ := lib.ExpectType[ast.DeclarationStmt](decl)
+func interpret_declaration(input any, env *env) {
+	declaration, _ := lib.ExpectType[ast.DeclarationStmt](input)
+
+	env.Declarations[declaration.Identifier] = interpret(declaration.AssignedValue, env)
+}
+
+func interpret_assignment(input any, env *env) {
+	d, _ := lib.ExpectType[ast.DeclarationStmt](input)
 
 	env.Declarations[d.Identifier] = interpret(d.AssignedValue, env)
 }
 
-func interpret_symbol_expr(exp any, env *env) any {
-	s, _ := lib.ExpectType[ast.SymbolExpr](exp)
-	v, _ := env.Declarations[s.Value]
-	return v
+func interpret_symbol_expr(input any, env *env) any {
+	symbol, _ := lib.ExpectType[ast.SymbolExpr](input)
+	value, _ := env.Declarations[symbol.Value]
+	return value
 }
 
-func interpret_binary_exp(expression any, env *env) any {
-	e, _ := lib.ExpectType[ast.BinaryExpr](expression)
-	left_result := interpret(e.Left, env)
-	right_esult := interpret(e.Right, env)
-	return execute_op(e.Operator.Kind, left_result, right_esult)
+func interpret_binary_exp(input any, env *env) any {
+	expression, _ := lib.ExpectType[ast.BinaryExpr](input)
+	left_result := interpret(expression.Left, env)
+	right_esult := interpret(expression.Right, env)
+	return execute_op(expression.Operator.Kind, left_result, right_esult)
 }
