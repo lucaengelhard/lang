@@ -55,12 +55,6 @@ type EnumStmt struct {
 
 func (n EnumStmt) stmt() {}
 
-type FnArg struct {
-	Identifier string
-	IsMutable  bool
-	Type       Type
-}
-
 type IfStmt struct {
 	Condition Expr
 	True      BlockStmt

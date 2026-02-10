@@ -97,6 +97,13 @@ type FnCallExpr struct {
 
 func (n FnCallExpr) expr() {}
 
+type FnArg struct {
+	Identifier string
+	Position   int
+	IsMutable  bool
+	Type       Type
+}
+
 type FnDeclareExpr struct {
 	Arguments  map[string]FnArg
 	Type       Type

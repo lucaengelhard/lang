@@ -212,6 +212,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 
 	p.expect(lexer.OPEN_PAREN)
 
+	var arg_index = 0
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
 		var explicitType ast.Type
 		isMutable := p.currentTokenKind() == lexer.MUT
@@ -233,12 +234,14 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 
 		arguments[argumentIdentifier] = ast.FnArg{
 			Identifier: argumentIdentifier,
+			Position:   arg_index,
 			IsMutable:  isMutable,
 			Type:       explicitType,
 		}
 
 		if p.currentTokenKind() != lexer.CLOSE_PAREN {
 			p.expect(lexer.COMMA)
+			arg_index++
 		}
 	}
 
