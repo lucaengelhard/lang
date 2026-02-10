@@ -29,7 +29,7 @@ func (env *env) get(identifier string) (*env_decl, error) {
 	}
 
 	if !exist && env.Parent == nil {
-		return &env_decl{}, fmt.Errorf("Type %s doesn't exist\n", identifier)
+		return &env_decl{}, fmt.Errorf("Variable %s doesn't exist\n", identifier)
 	}
 
 	return env.Parent.get(identifier)
@@ -73,11 +73,12 @@ func Init(node any) {
 	interpret(node, createStdEnv())
 }
 
-func interpret(node any, env *env) any {
+func interpret(node any, env *env) (any, any) {
 	var result any
+	var return_value any
 	switch node.(type) {
 	case ast.BlockStmt:
-		interpret_block(node, env)
+		return_value = interpret_block(node, env)
 	case ast.DeclarationStmt:
 		interpret_declaration(node, env)
 	case ast.FnDeclareExpr:
@@ -88,7 +89,7 @@ func interpret(node any, env *env) any {
 		result = interpret_symbol_expr(node, env)
 	case ast.ExpressionStmt:
 		e, _ := lib.ExpectType[ast.ExpressionStmt](node)
-		result = interpret(e.Expression, env)
+		result, _ = interpret(e.Expression, env)
 	case ast.IntExpr:
 		i, _ := lib.ExpectType[ast.IntExpr](node)
 		result = i.Value
@@ -101,25 +102,36 @@ func interpret(node any, env *env) any {
 		interpret_assignment(node, env)
 	case ast.PrefixExpr:
 		result = interpret_prefix_expr(node, env)
+	case ast.IfStmt:
+		return_value = interpret_if_stmt(node, env)
+	case ast.ReturnStmt:
+		stmt, _ := lib.ExpectType[ast.ReturnStmt](node)
+		return_value, _ = interpret(stmt.Value, env)
 	default:
 		fmt.Printf("Unhandled: %s\n", reflect.TypeOf(node))
 		litter.Dump(node)
 	}
 
-	return result
+	return result, return_value
 }
 
-func interpret_block(input any, env *env) {
+func interpret_block(input any, env *env) any {
 	block, _ := lib.ExpectType[ast.BlockStmt](input)
 	scope := createEnv(env)
 	for _, stmt := range block.Body {
-		interpret(stmt, scope)
+		_, return_value := interpret(stmt, scope)
+		if return_value != nil {
+			return return_value
+		}
 	}
+
+	return nil
 }
 
 func interpret_declaration(input any, env *env) {
 	declaration, _ := lib.ExpectType[ast.DeclarationStmt](input)
-	env.set(declaration.Identifier, interpret(declaration.AssignedValue, env), true, declaration.IsMutable)
+	val, _ := interpret(declaration.AssignedValue, env)
+	env.set(declaration.Identifier, val, true, declaration.IsMutable)
 }
 
 func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
@@ -152,13 +164,11 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 		}
 
 		for _, stmt := range block.Body {
-			switch stmt.(type) {
-			case ast.ReturnStmt:
-				ret, _ := lib.ExpectType[ast.ReturnStmt](stmt)
-				return interpret(ret.Value, scope)
-			default:
-				interpret(stmt, scope)
+			_, ret := interpret(stmt, env)
+			if ret != nil {
+				return ret
 			}
+
 		}
 		return nil
 	}
@@ -179,9 +189,10 @@ func interpret_fn_call(input any, env *env) any {
 	args := make([]FnCallArg, 0)
 
 	for _, arg := range call.Arguments {
+		val, _ := interpret(arg.Value, env)
 		args = append(args, FnCallArg{
 			Identifier: arg.Identifier,
-			Value:      interpret(arg.Value, env),
+			Value:      val,
 		})
 	}
 
@@ -191,7 +202,7 @@ func interpret_fn_call(input any, env *env) any {
 func interpret_assignment(input any, env *env) {
 	assignment, _ := lib.ExpectType[ast.AssignmentExpr](input)
 	assignee, _ := lib.ExpectType[ast.SymbolExpr](assignment.Assignee)
-	right_result := interpret(assignment.Right, env)
+	right_result, _ := interpret(assignment.Right, env)
 
 	current, error := env.get(assignee.Value)
 
@@ -210,21 +221,26 @@ func interpret_assignment(input any, env *env) {
 
 func interpret_symbol_expr(input any, env *env) any {
 	symbol, _ := lib.ExpectType[ast.SymbolExpr](input)
-	value, _ := env.get(symbol.Value)
+	value, err := env.get(symbol.Value)
+
+	if err != nil {
+		panic(err)
+	}
+
 	return value.Value
 }
 
 func interpret_binary_exp(input any, env *env) any {
 	expression, _ := lib.ExpectType[ast.BinaryExpr](input)
-	left_result := interpret(expression.Left, env)
-	right_esult := interpret(expression.Right, env)
+	left_result, _ := interpret(expression.Left, env)
+	right_result, _ := interpret(expression.Right, env)
 
-	return execute_binop(expression.Operator.Kind, left_result, right_esult)
+	return execute_binop(expression.Operator.Kind, left_result, right_result)
 }
 
 func interpret_prefix_expr(input any, env *env) any {
 	expression, _ := lib.ExpectType[ast.PrefixExpr](input)
-	right_result := interpret(expression.Right, env)
+	right_result, _ := interpret(expression.Right, env)
 
 	switch expression.Operator.Kind {
 	case lexer.MINUS:
@@ -234,4 +250,20 @@ func interpret_prefix_expr(input any, env *env) any {
 		fmt.Printf("Unhandled prefix: %s\n", expression.Operator.Kind.ToString())
 		return nil
 	}
+}
+
+func interpret_if_stmt(input any, env *env) any {
+	var return_value any
+	stmt, _ := lib.ExpectType[ast.IfStmt](input)
+
+	cond, _ := interpret(stmt.Condition, env)
+	decision, _ := lib.ExpectType[bool](cond)
+
+	if decision {
+		_, return_value = interpret(stmt.True, env)
+	} else {
+		_, return_value = interpret(stmt.False, env)
+	}
+
+	return return_value
 }

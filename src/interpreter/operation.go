@@ -73,6 +73,8 @@ func createOpLookup() {
 	create_binop_with_cast(lexer.SLASH, float_div, int_to_float)
 	create_binop(lexer.PERCENT, int_mod)
 
+	create_binop(lexer.EQUALS, int_comp)
+
 	assignment_operation_lu[lexer.PLUS_EQUALS] = lexer.PLUS
 	assignment_operation_lu[lexer.MINUS_EQUALS] = lexer.MINUS
 	assignment_operation_lu[lexer.PLUS_PLUS] = lexer.PLUS
@@ -99,6 +101,14 @@ func int_mod(l int64, r int64) int64 {
 	return l % r
 }
 
+func int_comp(l int64, r int64) bool {
+	return l == r
+}
+
+func float_comp(l float64, r float64) bool {
+	return l == r
+}
+
 func float_add(l float64, r float64) float64 {
 	return l + r
 }
@@ -119,16 +129,16 @@ func int_to_float(input int64) float64 {
 	return float64(input)
 }
 
-func create_binop_with_cast[From any, To any](token lexer.TokenKind, op func(l To, r To) To, cast func(f From) To) {
-	no_cast := func(l To, r To) To {
+func create_binop_with_cast[From any, To any, Return any](token lexer.TokenKind, op func(l To, r To) Return, cast func(f From) To) {
+	no_cast := func(l To, r To) Return {
 		return op(l, r)
 	}
 
-	left := func(l From, r To) To {
+	left := func(l From, r To) Return {
 		return op(cast(l), r)
 	}
 
-	right := func(l To, r From) To {
+	right := func(l To, r From) Return {
 		return op(l, cast(r))
 	}
 	create_binop(token, no_cast)
