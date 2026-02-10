@@ -54,6 +54,9 @@ func interpret(node any, env *env) any {
 	case ast.IntExpr:
 		i, _ := lib.ExpectType[ast.IntExpr](node)
 		result = i.Value
+	case ast.FloatExpr:
+		i, _ := lib.ExpectType[ast.FloatExpr](node)
+		result = i.Value
 	case ast.BinaryExpr:
 		result = interpret_binary_exp(node, env)
 	default:

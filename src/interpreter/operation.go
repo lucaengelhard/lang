@@ -63,10 +63,14 @@ func execute_op(token lexer.TokenKind, left any, right any) any {
 
 func createOpLookup() {
 	create_op(lexer.PLUS, int_add)
+	with_cast(lexer.PLUS, float_add, int_to_float)
 	create_op(lexer.MINUS, int_sub)
+	with_cast(lexer.MINUS, float_minus, int_to_float)
 	create_op(lexer.STAR, int_mult)
+	with_cast(lexer.STAR, float_mult, int_to_float)
 	create_op(lexer.SLASH, int_div)
-	create_op(lexer.PLUS, float_add)
+	with_cast(lexer.SLASH, float_div, int_to_float)
+
 }
 
 func int_add(l int64, r int64) int64 {
@@ -89,7 +93,35 @@ func float_add(l float64, r float64) float64 {
 	return l + r
 }
 
-// make generic int to float transformer that just returns the correct function?
-func int_float_add(l int64, r float64) float64 {
-	return float64(l) + r
+func float_minus(l float64, r float64) float64 {
+	return l - r
+}
+
+func float_mult(l float64, r float64) float64 {
+	return l * r
+}
+
+func float_div(l float64, r float64) float64 {
+	return l / r
+}
+
+func int_to_float(input int64) float64 {
+	return float64(input)
+}
+
+func with_cast[From any, To any](token lexer.TokenKind, op func(l To, r To) To, cast func(f From) To) {
+	no_cast := func(l To, r To) To {
+		return op(l, r)
+	}
+
+	left := func(l From, r To) To {
+		return op(cast(l), r)
+	}
+
+	right := func(l To, r From) To {
+		return op(l, cast(r))
+	}
+	create_op(token, no_cast)
+	create_op(token, left)
+	create_op(token, right)
 }
