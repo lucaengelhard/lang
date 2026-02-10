@@ -69,7 +69,8 @@ func createEnv(parent *env) *env {
 
 func Init(node any) {
 	createOpLookup()
-	interpret(node, nil)
+
+	interpret(node, createStdEnv())
 }
 
 func interpret(node any, env *env) any {
@@ -121,7 +122,7 @@ func interpret_declaration(input any, env *env) {
 	env.set(declaration.Identifier, interpret(declaration.AssignedValue, env), true, declaration.IsMutable)
 }
 
-func interpret_fn_declaration(input any, env *env) func(args []FnCallArg) any {
+func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 	declaration, _ := lib.ExpectType[ast.FnDeclareExpr](input)
 	block, _ := lib.ExpectType[ast.BlockStmt](declaration.Body)
 	position_arg_map := make([]ast.FnArg, len(declaration.Arguments))
@@ -130,7 +131,7 @@ func interpret_fn_declaration(input any, env *env) func(args []FnCallArg) any {
 		position_arg_map[arg.Position] = arg
 	}
 
-	return func(args []FnCallArg) any {
+	return func(args ...FnCallArg) any {
 		scope := createEnv(env)
 
 		for index, arg := range args {
@@ -173,7 +174,7 @@ func interpret_fn_call(input any, env *env) any {
 	caller_symbol, _ := lib.ExpectType[ast.SymbolExpr](call.Caller)
 
 	declaration, _ := env.get(caller_symbol.Value)
-	fn, _ := lib.ExpectType[func(args []FnCallArg) any](declaration.Value)
+	fn, _ := lib.ExpectType[func(args ...FnCallArg) any](declaration.Value)
 
 	args := make([]FnCallArg, 0)
 
@@ -184,7 +185,7 @@ func interpret_fn_call(input any, env *env) any {
 		})
 	}
 
-	return fn(args)
+	return fn(args...)
 }
 
 func interpret_assignment(input any, env *env) {
