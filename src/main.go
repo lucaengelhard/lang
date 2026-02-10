@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/lucaengelhard/lang/src/interpreter"
 	"github.com/lucaengelhard/lang/src/lexer"
 	"github.com/lucaengelhard/lang/src/parser"
-	"github.com/lucaengelhard/lang/src/typecheck"
-	"github.com/sanity-io/litter"
 )
 
 func main() {
@@ -15,12 +13,15 @@ func main() {
 	tokens := lexer.Tokenize(string(bytes))
 
 	ast := parser.Parse(tokens)
+	//litter.Dump(ast)
 
-	res, err := typecheck.Check(ast, nil)
+	interpreter.Init(ast)
+
+	/* res, err := typecheck.Check(ast, nil)
 
 	for _, e := range err {
 		fmt.Println(e.Error())
 	}
 
-	litter.Dump(res)
+	litter.Dump(res) */
 }
