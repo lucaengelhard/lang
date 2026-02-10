@@ -99,9 +99,10 @@ func parser_prefix_expr(p *parser) ast.Expr {
 func parse_postfix_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 	operator := p.advance()
 
-	return ast.PostfixExpr{
-		Left:     left,
+	return ast.AssignmentExpr{
+		Assignee: left,
 		Operator: operator,
+		Right:    ast.IntExpr{Value: 1},
 	}
 }
 

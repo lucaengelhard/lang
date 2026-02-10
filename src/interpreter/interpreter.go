@@ -95,10 +95,10 @@ func interpret_assignment(input any, env *env) {
 		panic(fmt.Sprintf("Variable %s doesn't exist in the current scope\n", assignee.Value))
 	}
 
-	alternative_op, alt_exists := assign_lu[assignment.Operator.Kind]
+	op_token, op_token_exists := assignment_operation_lu[assignment.Operator.Kind]
 
-	if alt_exists {
-		env.Declarations[assignee.Value] = execute_op(alternative_op, current, right_result)
+	if op_token_exists {
+		env.Declarations[assignee.Value] = execute_op(op_token, current, right_result)
 	} else {
 		env.Declarations[assignee.Value] = right_result
 	}

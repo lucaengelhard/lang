@@ -12,7 +12,7 @@ type operation func(l, r any) any
 type op_lookup map[lexer.TokenKind]map[reflect.Type]map[reflect.Type]operation
 
 var op_lu = op_lookup{}
-var assign_lu = map[lexer.TokenKind]lexer.TokenKind{}
+var assignment_operation_lu = map[lexer.TokenKind]lexer.TokenKind{}
 
 func create_op[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R) Ret) {
 	_, tk_map_exists := op_lu[token]
@@ -73,8 +73,10 @@ func createOpLookup() {
 	with_cast(lexer.SLASH, float_div, int_to_float)
 	create_op(lexer.PERCENT, int_mod)
 
-	assign_lu[lexer.PLUS_EQUALS] = lexer.PLUS
-	assign_lu[lexer.MINUS_EQUALS] = lexer.MINUS
+	assignment_operation_lu[lexer.PLUS_EQUALS] = lexer.PLUS
+	assignment_operation_lu[lexer.MINUS_EQUALS] = lexer.MINUS
+	assignment_operation_lu[lexer.PLUS_PLUS] = lexer.PLUS
+	assignment_operation_lu[lexer.MINUS_MINUS] = lexer.MINUS
 }
 
 func int_add(l int64, r int64) int64 {
