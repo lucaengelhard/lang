@@ -70,7 +70,7 @@ func createOpLookup() {
 	with_cast(lexer.STAR, float_mult, int_to_float)
 	create_op(lexer.SLASH, int_div)
 	with_cast(lexer.SLASH, float_div, int_to_float)
-
+	create_op(lexer.PERCENT, int_mod)
 }
 
 func int_add(l int64, r int64) int64 {
@@ -87,6 +87,10 @@ func int_mult(l int64, r int64) int64 {
 
 func int_div(l int64, r int64) int64 {
 	return l / r
+}
+
+func int_mod(l int64, r int64) int64 {
+	return l % r
 }
 
 func float_add(l float64, r float64) float64 {
