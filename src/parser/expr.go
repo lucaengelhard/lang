@@ -183,7 +183,7 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 			p.advance()
 		}
 
-		expr := parse_expr(p, logical)
+		expr := parse_expr(p, default_bp)
 
 		arguments = append(arguments, ast.FnCallArg{
 			Identifier: argumentIdentifier,

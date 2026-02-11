@@ -102,6 +102,9 @@ func createOpLookup() {
 	create_binop(lexer.LESS_EQUALS, lesser_eq[int64])
 	create_binop_with_cast(lexer.LESS_EQUALS, lesser_eq[float64], int_to_float)
 
+	create_binop(lexer.OR, or)
+	create_binop(lexer.AND, and)
+
 	assignment_operation_lu[lexer.PLUS_EQUALS] = lexer.PLUS
 	assignment_operation_lu[lexer.MINUS_EQUALS] = lexer.MINUS
 	assignment_operation_lu[lexer.PLUS_PLUS] = lexer.PLUS
@@ -150,4 +153,12 @@ func greater_eq[T lib.Orderable](l T, r T) bool {
 
 func lesser_eq[T lib.Orderable](l T, r T) bool {
 	return l <= r
+}
+
+func and(l bool, r bool) bool {
+	return l && r
+}
+
+func or(l bool, r bool) bool {
+	return l || r
 }
