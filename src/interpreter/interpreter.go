@@ -106,6 +106,8 @@ func interpret(node any, env *env) (any, any) {
 	case ast.StringExpr:
 		s, _ := lib.ExpectType[ast.StringExpr](node)
 		result = s.Value
+	case ast.ArrayInstantiationExpr:
+		result = interpret_arr_instantiation(node, env)
 	case ast.BinaryExpr:
 		result = interpret_binary_exp(node, env)
 	case ast.AssignmentExpr:
@@ -369,4 +371,17 @@ func interpret_while_stmt(input any, env *env) any {
 	}
 
 	return ret
+}
+
+func interpret_arr_instantiation(input any, env *env) any {
+	arr, _ := lib.ExpectType[ast.ArrayInstantiationExpr](input)
+
+	res := make([]any, 0)
+
+	for _, el := range arr.Elements {
+		el_res, _ := interpret(el, env)
+		res = append(res, el_res)
+	}
+
+	return res
 }
