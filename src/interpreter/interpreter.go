@@ -164,11 +164,10 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 		}
 
 		for _, stmt := range block.Body {
-			_, ret := interpret(stmt, env)
+			_, ret := interpret(stmt, scope)
 			if ret != nil {
 				return ret
 			}
-
 		}
 		return nil
 	}
