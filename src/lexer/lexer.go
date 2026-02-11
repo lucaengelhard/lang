@@ -143,8 +143,9 @@ func numberHandler(lex *lexer, regex *regexp.Regexp) {
 func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	literal := lex.remainder()[match[0]:match[1]]
-	unqoute, _ := strconv.Unquote(literal)
-	lex.push(NewToken(STRING, unqoute, lex.get_file_pos()))
+	unqouted, _ := strconv.Unquote(literal)
+
+	lex.push(NewToken(STRING, unqouted, lex.get_file_pos()))
 	lex.advanceN(len(literal))
 }
 
