@@ -17,7 +17,7 @@ type env_decl struct {
 }
 
 type env struct {
-	Declarations map[string]env_decl
+	Declarations map[string]*env_decl
 	Parent       *env
 }
 
@@ -25,7 +25,7 @@ func (env *env) get(identifier string) (*env_decl, error) {
 	res, exist := env.Declarations[identifier]
 
 	if exist {
-		return &res, nil
+		return res, nil
 	}
 
 	if !exist && env.Parent == nil {
@@ -40,7 +40,7 @@ func (env *env) set(identifer string, value any, isNew bool, isMutable bool) {
 		if _, exists := env.Declarations[identifer]; exists {
 			panic(fmt.Sprintf("%s already exist in scope\n", identifer))
 		}
-		env.Declarations[identifer] = env_decl{
+		env.Declarations[identifer] = &env_decl{
 			Identifier: identifer,
 			Mutable:    isMutable,
 			Value:      value,
@@ -63,7 +63,7 @@ func (env *env) set(identifer string, value any, isNew bool, isMutable bool) {
 func createEnv(parent *env) *env {
 	return &env{
 		Parent:       parent,
-		Declarations: map[string]env_decl{},
+		Declarations: map[string]*env_decl{},
 	}
 }
 
@@ -216,6 +216,7 @@ func interpret_assignment(input any, env *env) {
 	} else {
 		env.set(assignee.Value, right_result, false, false)
 	}
+
 }
 
 func interpret_symbol_expr(input any, env *env) any {
