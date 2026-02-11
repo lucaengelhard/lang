@@ -152,26 +152,44 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 
 	return func(args ...FnCallArg) any {
 		scope := createEnv(env)
-
-		for index, arg := range args {
+		var NAMED_ARG_FLAG = false
+		for index, passed_arg := range args {
 			var definition_arg ast.FnArg
 
-			if arg.Identifier != "" {
-				named_arg, exists := declaration.Arguments[arg.Identifier]
+			if passed_arg.Identifier != "" {
+				named_arg, exists := declaration.Arguments[passed_arg.Identifier]
 
 				if !exists {
-					panic(fmt.Sprintf("Argument %s doesn't exist on function", arg.Identifier))
+					panic(fmt.Sprintf("Argument %s doesn't exist on function", passed_arg.Identifier))
 				}
 
 				definition_arg = named_arg
+				NAMED_ARG_FLAG = true
 			} else {
+				if NAMED_ARG_FLAG {
+					panic("Positional arguments not allowed after named arguments have been set")
+				}
 				definition_arg = position_arg_map[index]
 			}
 
+			if definition_arg.IsReference {
+				if passed_arg.Reference == nil {
+					panic(fmt.Sprintf("Expected reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.Position))
+				}
+
+				if definition_arg.IsMutable && !passed_arg.Reference.IsMutable {
+					panic(fmt.Sprintf("Expected mutable reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.Position))
+				}
+
+				scope.set_ref(definition_arg.Identifier, passed_arg.Reference)
+			}
+
 			if !definition_arg.IsReference {
-				scope.set(definition_arg.Identifier, arg.Value, true, definition_arg.IsMutable)
-			} else {
-				scope.set_ref(definition_arg.Identifier, arg.Reference)
+				if passed_arg.Reference != nil {
+					panic(fmt.Sprintf("Expected argument %s (%v) to be passed by value, got reference\n", definition_arg.Identifier, definition_arg.Position))
+				}
+
+				scope.set(definition_arg.Identifier, passed_arg.Value, true, definition_arg.IsMutable)
 			}
 		}
 
