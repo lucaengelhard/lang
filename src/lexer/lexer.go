@@ -3,6 +3,7 @@ package lexer
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 )
 
 type regexHandler func(lex *lexer, regex *regexp.Regexp)
@@ -66,7 +67,7 @@ func createLexer(source string) *lexer {
 		{regexp.MustCompile(`\s+`), skipHandler},
 		{regexp.MustCompile(`\/\/.*`), skipHandler},
 		{regexp.MustCompile(`\/\*[\s\S]*?\*\/`), skipHandler},
-		{regexp.MustCompile(`"[^"]*"`), stringHandler},
+		{regexp.MustCompile(`"(?:[^"\\]|\\.)*"`), stringHandler},
 		{regexp.MustCompile(`[0-9]+(\.[0-9]+)?`), numberHandler},
 		{regexp.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), symbolHandler},
 		{regexp.MustCompile(`\[`), defaultHandler(OPEN_BRACKET, "[")},
@@ -141,9 +142,10 @@ func numberHandler(lex *lexer, regex *regexp.Regexp) {
 
 func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
-	literal := lex.remainder()[match[0]+1 : match[1]-1]
-	lex.push(NewToken(STRING, literal, lex.get_file_pos()))
-	lex.advanceN(len(literal) + 2)
+	literal := lex.remainder()[match[0]:match[1]]
+	unqoute, _ := strconv.Unquote(literal)
+	lex.push(NewToken(STRING, unqoute, lex.get_file_pos()))
+	lex.advanceN(len(literal))
 }
 
 func symbolHandler(lex *lexer, regex *regexp.Regexp) {

@@ -12,6 +12,7 @@ const (
 
 	NUMBER
 	STRING
+	F_STRING
 	IDENTIFIER
 
 	OPEN_BRACKET
@@ -109,6 +110,7 @@ var token_string_lu map[TokenKind]string = map[TokenKind]string{
 	EOF:            "eof",
 	NUMBER:         "number",
 	STRING:         "string",
+	F_STRING:       "format_string",
 	IDENTIFIER:     "identifier",
 	OPEN_BRACKET:   "open_bracket",
 	CLOSE_BRACKET:  "close_bracket",

@@ -32,6 +32,13 @@ type StringExpr struct {
 
 func (n StringExpr) expr() {}
 
+type FormatStringExpr struct {
+	Slices []string
+	Body   []Expr
+}
+
+func (n FormatStringExpr) expr() {}
+
 type SymbolExpr struct {
 	Value       string
 	IsReference bool
