@@ -35,6 +35,23 @@ func create_binop[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R
 	}
 }
 
+func create_binop_with_cast[From any, To any, Return any](token lexer.TokenKind, op func(l To, r To) Return, cast func(f From) To) {
+	no_cast := func(l To, r To) Return {
+		return op(l, r)
+	}
+
+	left := func(l From, r To) Return {
+		return op(cast(l), r)
+	}
+
+	right := func(l To, r From) Return {
+		return op(l, cast(r))
+	}
+	create_binop(token, no_cast)
+	create_binop(token, left)
+	create_binop(token, right)
+}
+
 func get_op(token lexer.TokenKind, left any, right any) binop {
 	err_str := fmt.Sprintf("No operation for %s and %s\n", reflect.TypeOf(left), reflect.TypeOf(right))
 	tk, exists_tk := binop_lu[token]
@@ -63,17 +80,27 @@ func execute_binop(token lexer.TokenKind, left any, right any) any {
 }
 
 func createOpLookup() {
-	create_binop(lexer.PLUS, int_add)
-	create_binop_with_cast(lexer.PLUS, float_add, int_to_float)
-	create_binop(lexer.MINUS, int_sub)
-	create_binop_with_cast(lexer.MINUS, float_minus, int_to_float)
-	create_binop(lexer.STAR, int_mult)
-	create_binop_with_cast(lexer.STAR, float_mult, int_to_float)
-	create_binop(lexer.SLASH, int_div)
-	create_binop_with_cast(lexer.SLASH, float_div, int_to_float)
-	create_binop(lexer.PERCENT, int_mod)
+	create_binop(lexer.PLUS, add[string])
+	create_binop(lexer.PLUS, add[int64])
+	create_binop_with_cast(lexer.PLUS, add[float64], int_to_float)
+	create_binop(lexer.MINUS, sub[int64])
+	create_binop_with_cast(lexer.MINUS, sub[float64], int_to_float)
+	create_binop(lexer.STAR, mult[int64])
+	create_binop_with_cast(lexer.STAR, mult[float64], int_to_float)
+	create_binop(lexer.SLASH, div[int64])
+	create_binop_with_cast(lexer.SLASH, div[float64], int_to_float)
+	create_binop(lexer.PERCENT, mod[int64])
 
-	create_binop(lexer.EQUALS, int_comp)
+	create_binop(lexer.EQUALS, eq[int64])
+	create_binop(lexer.EQUALS, eq[float64])
+	create_binop(lexer.GREATER, greater[int64])
+	create_binop_with_cast(lexer.GREATER, greater[float64], int_to_float)
+	create_binop(lexer.LESS, lesser[int64])
+	create_binop_with_cast(lexer.LESS, lesser[float64], int_to_float)
+	create_binop(lexer.GREATER_EQUALS, greater_eq[int64])
+	create_binop_with_cast(lexer.GREATER_EQUALS, greater_eq[float64], int_to_float)
+	create_binop(lexer.LESS_EQUALS, lesser_eq[int64])
+	create_binop_with_cast(lexer.LESS_EQUALS, lesser_eq[float64], int_to_float)
 
 	assignment_operation_lu[lexer.PLUS_EQUALS] = lexer.PLUS
 	assignment_operation_lu[lexer.MINUS_EQUALS] = lexer.MINUS
@@ -81,67 +108,46 @@ func createOpLookup() {
 	assignment_operation_lu[lexer.MINUS_MINUS] = lexer.MINUS
 }
 
-func int_add(l int64, r int64) int64 {
-	return l + r
-}
-
-func int_sub(l int64, r int64) int64 {
-	return l - r
-}
-
-func int_mult(l int64, r int64) int64 {
-	return l * r
-}
-
-func int_div(l int64, r int64) int64 {
-	return l / r
-}
-
-func int_mod(l int64, r int64) int64 {
-	return l % r
-}
-
-func int_comp(l int64, r int64) bool {
-	return l == r
-}
-
-func float_comp(l float64, r float64) bool {
-	return l == r
-}
-
-func float_add(l float64, r float64) float64 {
-	return l + r
-}
-
-func float_minus(l float64, r float64) float64 {
-	return l - r
-}
-
-func float_mult(l float64, r float64) float64 {
-	return l * r
-}
-
-func float_div(l float64, r float64) float64 {
-	return l / r
-}
-
 func int_to_float(input int64) float64 {
 	return float64(input)
 }
 
-func create_binop_with_cast[From any, To any, Return any](token lexer.TokenKind, op func(l To, r To) Return, cast func(f From) To) {
-	no_cast := func(l To, r To) Return {
-		return op(l, r)
-	}
+func add[T lib.Arithmetic | ~string](l T, r T) T {
+	return l + r
+}
 
-	left := func(l From, r To) Return {
-		return op(cast(l), r)
-	}
+func sub[T lib.Arithmetic](l T, r T) T {
+	return l - r
+}
 
-	right := func(l To, r From) Return {
-		return op(l, cast(r))
-	}
-	create_binop(token, no_cast)
-	create_binop(token, left)
-	create_binop(token, right)
+func mult[T lib.Arithmetic](l T, r T) T {
+	return l * r
+}
+
+func div[T lib.Arithmetic](l T, r T) T {
+	return l / r
+}
+
+func mod[T lib.Int](l T, r T) T {
+	return l & r
+}
+
+func eq[T lib.Compareable](l T, r T) bool {
+	return l == r
+}
+
+func greater[T lib.Orderable](l T, r T) bool {
+	return l > r
+}
+
+func lesser[T lib.Orderable](l T, r T) bool {
+	return l < r
+}
+
+func greater_eq[T lib.Orderable](l T, r T) bool {
+	return l >= r
+}
+
+func lesser_eq[T lib.Orderable](l T, r T) bool {
+	return l <= r
 }
