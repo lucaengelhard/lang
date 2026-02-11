@@ -11,9 +11,10 @@ import (
 )
 
 type env_decl struct {
-	Identifier string
-	Mutable    bool
-	Value      any
+	Identifier  string
+	IsMutable   bool
+	IsReference bool
+	Value       any
 }
 
 type env struct {
@@ -38,12 +39,14 @@ func (env *env) get(identifier string) (*env_decl, error) {
 func (env *env) set(identifer string, value any, isNew bool, isMutable bool) {
 	if isNew {
 		if _, exists := env.Declarations[identifer]; exists {
-			panic(fmt.Sprintf("%s already exist in scope\n", identifer))
+			panic(fmt.Sprintf("%s already exists in scope\n", identifer))
 		}
+
 		env.Declarations[identifer] = &env_decl{
-			Identifier: identifer,
-			Mutable:    isMutable,
-			Value:      value,
+			Identifier:  identifer,
+			IsMutable:   isMutable,
+			IsReference: false,
+			Value:       value,
 		}
 		return
 	}
@@ -54,10 +57,14 @@ func (env *env) set(identifer string, value any, isNew bool, isMutable bool) {
 		panic(err)
 	}
 
-	if !decl.Mutable {
+	if !decl.IsMutable {
 		panic(fmt.Sprintf("%s is not mutable\n", identifer))
 	}
 	decl.Value = value
+}
+
+func (env *env) set_ref(identifer string, ref *env_decl) {
+	env.Declarations[identifer] = ref
 }
 
 func createEnv(parent *env) *env {
@@ -147,6 +154,8 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 		scope := createEnv(env)
 
 		for index, arg := range args {
+			var definition_arg ast.FnArg
+
 			if arg.Identifier != "" {
 				named_arg, exists := declaration.Arguments[arg.Identifier]
 
@@ -154,13 +163,16 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 					panic(fmt.Sprintf("Argument %s doesn't exist on function", arg.Identifier))
 				}
 
-				scope.set(named_arg.Identifier, arg.Value, true, named_arg.IsMutable)
-
-				continue
+				definition_arg = named_arg
+			} else {
+				definition_arg = position_arg_map[index]
 			}
 
-			positional_arg := position_arg_map[index]
-			scope.set(positional_arg.Identifier, arg.Value, true, positional_arg.IsMutable)
+			if !definition_arg.IsReference {
+				scope.set(definition_arg.Identifier, arg.Value, true, definition_arg.IsMutable)
+			} else {
+				scope.set_ref(definition_arg.Identifier, arg.Reference)
+			}
 		}
 
 		for _, stmt := range block.Body {
@@ -176,6 +188,7 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 type FnCallArg struct {
 	Identifier string
 	Value      any
+	Reference  *env_decl
 }
 
 func interpret_fn_call(input any, env *env) any {
@@ -189,9 +202,22 @@ func interpret_fn_call(input any, env *env) any {
 
 	for _, arg := range call.Arguments {
 		val, _ := interpret(arg.Value, env)
+		var reference *env_decl
+		var identifier = arg.Identifier
+
+		switch arg.Value.(type) {
+		case ast.SymbolExpr:
+			symbol, _ := lib.ExpectType[ast.SymbolExpr](arg.Value)
+
+			if symbol.IsReference {
+				reference, _ = env.get(symbol.Value)
+			}
+		}
+
 		args = append(args, FnCallArg{
-			Identifier: arg.Identifier,
+			Identifier: identifier,
 			Value:      val,
+			Reference:  reference,
 		})
 	}
 

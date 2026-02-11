@@ -33,7 +33,8 @@ type StringExpr struct {
 func (n StringExpr) expr() {}
 
 type SymbolExpr struct {
-	Value string
+	Value       string
+	IsReference bool
 }
 
 func (n SymbolExpr) expr() {}
@@ -98,10 +99,11 @@ type FnCallExpr struct {
 func (n FnCallExpr) expr() {}
 
 type FnArg struct {
-	Identifier string
-	Position   int
-	IsMutable  bool
-	Type       Type
+	Identifier  string
+	Position    int
+	IsMutable   bool
+	IsReference bool
+	Type        Type
 }
 
 type FnDeclareExpr struct {

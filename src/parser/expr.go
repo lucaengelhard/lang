@@ -50,8 +50,6 @@ func parse_primary_expr(p *parser) ast.Expr {
 		}
 	case lexer.STRING:
 		return ast.StringExpr{Value: p.advance().Value}
-	case lexer.IDENTIFIER:
-		return ast.SymbolExpr{Value: p.advance().Value}
 	case lexer.TRUE:
 		p.advance()
 		return ast.BoolExpr{Value: true}
@@ -62,6 +60,15 @@ func parse_primary_expr(p *parser) ast.Expr {
 		p.addErr(fmt.Sprintf("Cannot create primary expression from %s\n", p.currentTokenKind().ToString()))
 		return ast.UnknowPrimary{}
 	}
+}
+
+func parse_symbol_expr(p *parser) ast.Expr {
+	isReference := p.currentTokenKind() == lexer.STAR
+	if isReference {
+		p.advance()
+	}
+
+	return ast.SymbolExpr{Value: p.advance().Value, IsReference: isReference}
 }
 
 func parse_binary_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
@@ -220,6 +227,11 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 			p.advance()
 		}
 
+		isReference := p.currentTokenKind() == lexer.STAR
+		if isReference {
+			p.advance()
+		}
+
 		argumentIdentifier := p.expect(lexer.IDENTIFIER).Value
 		if p.currentTokenKind() == lexer.COLON {
 			p.advance()
@@ -233,10 +245,11 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		}
 
 		arguments[argumentIdentifier] = ast.FnArg{
-			Identifier: argumentIdentifier,
-			Position:   arg_index,
-			IsMutable:  isMutable,
-			Type:       explicitType,
+			Identifier:  argumentIdentifier,
+			Position:    arg_index,
+			IsMutable:   isMutable,
+			IsReference: isReference,
+			Type:        explicitType,
 		}
 
 		if p.currentTokenKind() != lexer.CLOSE_PAREN {
