@@ -10,7 +10,11 @@ import (
 
 func main() {
 	bytes, _ := os.ReadFile(os.Args[1])
-	tokens := lexer.Tokenize(string(bytes))
+	tokens := lexer.Tokenize(string(bytes), true)
+
+	/* for _, t := range tokens {
+		fmt.Printf("%s -> %s\n", t.Kind.ToString(), t.Value)
+	} */
 
 	ast := parser.Parse(tokens)
 	//litter.Dump(ast)

@@ -81,6 +81,7 @@ func execute_binop(token lexer.TokenKind, left any, right any) any {
 
 func createOpLookup() {
 	create_binop(lexer.PLUS, add[string])
+	create_binop_with_cast(lexer.PLUS, add[string], int_to_str)
 	create_binop(lexer.PLUS, add[int64])
 	create_binop_with_cast(lexer.PLUS, add[float64], int_to_float)
 	create_binop(lexer.MINUS, sub[int64])
@@ -113,6 +114,10 @@ func createOpLookup() {
 
 func int_to_float(input int64) float64 {
 	return float64(input)
+}
+
+func int_to_str(input int64) string {
+	return fmt.Sprint(input)
 }
 
 func add[T lib.Arithmetic | ~string](l T, r T) T {

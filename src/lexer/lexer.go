@@ -36,8 +36,8 @@ func (lex *lexer) at_eof() bool {
 	return lex.pos >= len(lex.source)
 }
 
-func Tokenize(source string) []Token {
-	lex := createLexer(source)
+func Tokenize(source string, init bool) []Token {
+	lex := createLexer(source, init)
 
 	for !lex.at_eof() {
 		matched := false
@@ -61,8 +61,10 @@ func Tokenize(source string) []Token {
 	return lex.Tokens
 }
 
-func createLexer(source string) *lexer {
-	InitTokenLookup()
+func createLexer(source string, init bool) *lexer {
+	if init {
+		InitTokenLookup()
+	}
 	return &lexer{pos: 0, source: source, Tokens: make([]Token, 0), patterns: []regexPattern{
 		{regexp.MustCompile(`\s+`), skipHandler},
 		{regexp.MustCompile(`\/\/.*`), skipHandler},
@@ -145,7 +147,46 @@ func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	literal := lex.remainder()[match[0]:match[1]]
 	unqouted, _ := strconv.Unquote(literal)
 
-	lex.push(NewToken(STRING, unqouted, lex.get_file_pos()))
+	format := regexp.MustCompile(`{(.*?)}`).FindAllStringIndex(unqouted, -1)
+
+	strs := make([]string, 0)
+	sub_exprs := make([][]Token, 0)
+
+	var prev = 0
+	for _, format_match := range format {
+		left := unqouted[prev:format_match[0]]
+		strs = append(strs, left)
+		prev = format_match[1]
+
+		substr := unqouted[format_match[0]+1 : format_match[1]-1]
+		sub_exprs = append(sub_exprs, Tokenize(substr, false))
+	}
+
+	strs = append(strs, unqouted[prev:])
+
+	lex.push(NewToken(STRING, strs[0], lex.get_file_pos()))
+
+	for i, expr := range sub_exprs {
+		lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
+		lex.push(NewToken(OPEN_PAREN, "(", lex.get_file_pos()))
+		for _, tok := range expr {
+			if tok.Kind != EOF {
+				lex.push(tok)
+			}
+		}
+
+		lex.push(NewToken(CLOSE_PAREN, ")", lex.get_file_pos()))
+
+		lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
+
+		lex.push(NewToken(STRING, strs[i+1], lex.get_file_pos()))
+
+		/* if i == len(sub_exprs)-1 {
+			lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
+			lex.push(NewToken(STRING, strs[len(strs)-1], lex.get_file_pos()))
+		} */
+	}
+
 	lex.advanceN(len(literal))
 }
 
