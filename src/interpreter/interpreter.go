@@ -114,6 +114,10 @@ func interpret(node any, env *env) (any, any) {
 		result = interpret_prefix_expr(node, env)
 	case ast.IfStmt:
 		return_value = interpret_if_stmt(node, env)
+	case ast.ForStmt:
+		return_value = interpret_for_stmt(node, env)
+	case ast.WhileStmt:
+		return_value = interpret_while_stmt(node, env)
 	case ast.ReturnStmt:
 		stmt, _ := lib.ExpectType[ast.ReturnStmt](node)
 		return_value, _ = interpret(stmt.Value, env)
@@ -313,4 +317,56 @@ func interpret_if_stmt(input any, env *env) any {
 	}
 
 	return return_value
+}
+
+func interpret_for_stmt(input any, env *env) any {
+	stmt, _ := lib.ExpectType[ast.ForStmt](input)
+	scope := createEnv(env)
+
+	interpret(stmt.Assignment, scope)
+
+	var ret any
+	for true {
+		result, _ := interpret(stmt.Condition, scope)
+		condition, _ := lib.ExpectType[bool](result)
+
+		if !condition {
+			break
+		}
+
+		_, ret = interpret(stmt.Body, scope)
+
+		if ret != nil {
+			break
+		}
+
+		interpret(stmt.Increment, scope)
+
+	}
+
+	return ret
+}
+
+func interpret_while_stmt(input any, env *env) any {
+	stmt, _ := lib.ExpectType[ast.WhileStmt](input)
+	scope := createEnv(env)
+
+	var ret any
+	for true {
+		result, _ := interpret(stmt.Condition, scope)
+		condition, _ := lib.ExpectType[bool](result)
+
+		if !condition {
+			break
+		}
+
+		_, ret = interpret(stmt.Body, scope)
+
+		if ret != nil {
+			break
+		}
+
+	}
+
+	return ret
 }
