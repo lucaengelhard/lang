@@ -34,22 +34,8 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 	return left
 }
 
-func parse_primary_expr(p *parser) ast.Expr {
+func parse_boolean_expr(p *parser) ast.Expr {
 	switch p.currentTokenKind() {
-	case lexer.NUMBER:
-		val := p.advance().Value
-		if i, err := strconv.ParseInt(val, 10, 64); err == nil {
-			return ast.IntExpr{
-				Value: i,
-			}
-		}
-
-		number, _ := strconv.ParseFloat(val, 64)
-		return ast.FloatExpr{
-			Value: number,
-		}
-	case lexer.STRING:
-		return ast.StringExpr{Value: p.advance().Value}
 	case lexer.TRUE:
 		p.advance()
 		return ast.BoolExpr{Value: true}
@@ -57,9 +43,28 @@ func parse_primary_expr(p *parser) ast.Expr {
 		p.advance()
 		return ast.BoolExpr{Value: false}
 	default:
-		p.addErr(fmt.Sprintf("Cannot create primary expression from %s\n", p.currentTokenKind().ToString()))
+		p.addErr(fmt.Sprintf("Cannot create boolean expression from %s\n", p.currentTokenKind().ToString()))
 		return ast.UnknowPrimary{}
 	}
+}
+
+func parse_number_expr(p *parser) ast.Expr {
+	val := p.advance().Value
+	if i, err := strconv.ParseInt(val, 10, 64); err == nil {
+		return ast.IntExpr{
+			Value: i,
+		}
+	}
+
+	number, _ := strconv.ParseFloat(val, 64)
+	return ast.FloatExpr{
+		Value: number,
+	}
+}
+
+func parse_string_expr(p *parser) ast.Expr {
+	literal := p.advance().Value
+	return ast.StringExpr{Value: literal}
 }
 
 func parse_symbol_expr(p *parser) ast.Expr {
