@@ -85,7 +85,7 @@ func createOpLookup() {
 	create_binop(lexer.PLUS, add[int64])
 	create_binop_with_cast(lexer.PLUS, add[float64], int_to_float)
 	create_binop(lexer.MINUS, sub[int64])
-	create_binop_with_cast(lexer.MINUS, sub[float64], int_to_float)
+	create_binop_with_cast(lexer.MINUS, sub, int_to_float) // Also create for not casted?
 	create_binop(lexer.STAR, mult[int64])
 	create_binop_with_cast(lexer.STAR, mult[float64], int_to_float)
 	create_binop(lexer.SLASH, div[int64])
