@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/lucaengelhard/lang/src/errorhandling"
@@ -15,9 +14,6 @@ func main() {
 
 	// Tokenizing
 	lexer := lexer.Tokenize(source)
-	for _, t := range lexer.Tokens {
-		fmt.Printf("%s -> %s\n", t.Kind.ToString(), t.Literal)
-	}
 
 	// AST-Building
 

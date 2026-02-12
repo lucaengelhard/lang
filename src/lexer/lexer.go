@@ -54,6 +54,12 @@ func (lex *Lexer) panic(message string) {
 	lex.forceExit = true
 }
 
+func (lex *Lexer) Print() {
+	for _, t := range lex.Tokens {
+		fmt.Printf("%s -> %s\n", t.Kind.ToString(), t.Literal)
+	}
+}
+
 func Tokenize(source string) *Lexer {
 	lex := createLexer(source)
 
