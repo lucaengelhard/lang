@@ -1,31 +1,30 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
-	"github.com/lucaengelhard/lang/src/interpreter"
+	"github.com/lucaengelhard/lang/src/errorhandling"
 	"github.com/lucaengelhard/lang/src/lexer"
-	"github.com/lucaengelhard/lang/src/parser"
 )
 
 func main() {
+	// Reading file
 	bytes, _ := os.ReadFile(os.Args[1])
-	tokens := lexer.Tokenize(string(bytes), true)
+	source := string(bytes)
 
-	/* for _, t := range tokens {
-		fmt.Printf("%s -> %s\n", t.Kind.ToString(), t.Value)
-	} */
-
-	ast := parser.Parse(tokens)
-	//litter.Dump(ast)
-
-	interpreter.Init(ast)
-
-	/* res, err := typecheck.Check(ast, nil)
-
-	for _, e := range err {
-		fmt.Println(e.Error())
+	// Tokenizing
+	lexer := lexer.Tokenize(source)
+	for _, t := range lexer.Tokens {
+		fmt.Printf("%s -> %s\n", t.Kind.ToString(), t.Literal)
 	}
 
-	litter.Dump(res) */
+	// AST-Building
+
+	// Typechecking and updating of ast
+
+	// Interpretation / Compilation
+
+	// Error handling
+	errorhandling.PrintErrors(source, lexer.Errors)
 }

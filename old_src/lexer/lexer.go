@@ -3,82 +3,69 @@ package lexer
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 )
 
-type regexHandler func(lex *Lexer, regex *regexp.Regexp)
+type regexHandler func(lex *lexer, regex *regexp.Regexp)
 
 type regexPattern struct {
 	regex   *regexp.Regexp
 	handler regexHandler
 }
 
-type LexerError struct {
-	Message  string
-	Position int
+type lexer struct {
+	patterns []regexPattern
+	Tokens   []Token
+	source   string
+	pos      int
 }
 
-type Lexer struct {
-	patterns  []regexPattern
-	Tokens    []Token
-	source    string
-	pos       int
-	Errors    []LexerError
-	forceExit bool
-}
-
-func (lex *Lexer) advanceN(n int) {
+func (lex *lexer) advanceN(n int) {
 	lex.pos += n
 }
 
-func (lex *Lexer) push(token Token) {
+func (lex *lexer) push(token Token) {
 	lex.Tokens = append(lex.Tokens, token)
 }
 
-func (lex *Lexer) remainder() string {
+func (lex *lexer) remainder() string {
 	return lex.source[lex.pos:]
 }
 
-func (lex *Lexer) at_eof() bool {
+func (lex *lexer) at_eof() bool {
 	return lex.pos >= len(lex.source)
 }
 
-func (lex *Lexer) err(message string) {
-	lex.Errors = append(lex.Errors, LexerError{
-		Message:  message,
-		Position: lex.pos,
-	})
-}
+func Tokenize(source string, init bool) []Token {
+	lex := createLexer(source, init)
 
-func (lex *Lexer) panic(message string) {
-	lex.err(message)
-	lex.forceExit = true
-}
-
-func Tokenize(source string) *Lexer {
-	lex := createLexer(source)
-
-	for !lex.at_eof() && !lex.forceExit {
+	for !lex.at_eof() {
 		matched := false
+
 		for _, pattern := range lex.patterns {
 			location := pattern.regex.FindStringIndex(lex.remainder())
+
 			if location != nil && location[0] == 0 {
 				pattern.handler(lex, pattern.regex)
 				matched = true
 				break
 			}
 		}
+
 		if !matched {
-			lex.panic(fmt.Sprintf("unrecognized token at %s", lex.remainder()))
+			panic(fmt.Sprintf("Lexer Error -> unrecognized token near %s\n", lex.remainder()))
 		}
 	}
 
-	lex.push(NewToken(EOF, "EOF", lex.pos))
-	return lex
+	lex.push(NewToken(EOF, "EOF", lex.get_file_pos()))
+	return lex.Tokens
 }
 
-func createLexer(source string) *Lexer {
-	InitTokenLookup()
-	return &Lexer{pos: 0, source: source, Tokens: make([]Token, 0), Errors: make([]LexerError, 0), patterns: []regexPattern{
+func createLexer(source string, init bool) *lexer {
+	if init {
+		InitTokenLookup()
+	}
+	return &lexer{pos: 0, source: source, Tokens: make([]Token, 0), patterns: []regexPattern{
 		{regexp.MustCompile(`\s+`), skipHandler},
 		{regexp.MustCompile(`\/\/.*`), skipHandler},
 		{regexp.MustCompile(`\/\*[\s\S]*?\*\/`), skipHandler},
@@ -121,78 +108,95 @@ func createLexer(source string) *Lexer {
 	}}
 }
 
-func defaultHandler(kind TokenKind, value string) regexHandler {
-	return func(lex *Lexer, regex *regexp.Regexp) {
-		lex.advanceN(len(value))
-		lex.push(NewToken(kind, value, lex.pos))
+func (lex *lexer) get_file_pos() TokenPosition {
+	var line = 1
+	var col = 1
+	for index, r := range lex.source {
+		if index >= lex.pos {
+			break
+		}
+		col++
+		if r == '\n' || r == '\r' {
+			line++
+			col = 0
+		}
+	}
+
+	return TokenPosition{
+		Line: line,
+		Col:  col,
 	}
 }
 
-func numberHandler(lex *Lexer, regex *regexp.Regexp) {
+func defaultHandler(kind TokenKind, value string) regexHandler {
+	return func(lex *lexer, regex *regexp.Regexp) {
+		lex.advanceN(len(value))
+		lex.push(NewToken(kind, value, lex.get_file_pos()))
+	}
+}
+
+func numberHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
 
-	lex.push(NewToken(NUMBER, match, lex.pos))
+	lex.push(NewToken(NUMBER, match, lex.get_file_pos()))
 	lex.advanceN(len(match))
 }
 
-func stringHandler(lex *Lexer, regex *regexp.Regexp) {
+func stringHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	literal := lex.remainder()[match[0]:match[1]]
+	unqouted, _ := strconv.Unquote(literal)
 
-	/*
-		unqouted, _ := strconv.Unquote(literal)
+	format := regexp.MustCompile(`{(.*?)}`).FindAllStringIndex(unqouted, -1)
 
-		format := regexp.MustCompile(`{(.*?)}`).FindAllStringIndex(unqouted, -1)
+	strs := make([]string, 0)
+	sub_exprs := make([][]Token, 0)
 
-		strs := make([]string, 0)
-		sub_exprs := make([][]Token, 0)
+	var prev = 0
+	for _, format_match := range format {
+		left := unqouted[prev:format_match[0]]
+		strs = append(strs, left)
+		prev = format_match[1]
 
-		var prev = 0
-		for _, format_match := range format {
-			left := unqouted[prev:format_match[0]]
-			strs = append(strs, left)
-			prev = format_match[1]
+		substr := unqouted[format_match[0]+1 : format_match[1]-1]
+		sub_exprs = append(sub_exprs, Tokenize(substr, false))
+	}
 
-			substr := unqouted[format_match[0]+1 : format_match[1]-1]
-			sub_exprs = append(sub_exprs, Tokenize(substr, false))
+	strs = append(strs, unqouted[prev:])
+
+	lex.push(NewToken(STRING, strs[0], lex.get_file_pos()))
+
+	for i, expr := range sub_exprs {
+		lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
+		lex.push(NewToken(OPEN_PAREN, "(", lex.get_file_pos()))
+		for _, tok := range expr {
+			if tok.Kind != EOF {
+				lex.push(tok)
+			}
 		}
 
-		strs = append(strs, unqouted[prev:])
+		lex.push(NewToken(CLOSE_PAREN, ")", lex.get_file_pos()))
 
-		lex.push(NewToken(STRING, strs[0], lex.get_file_pos()))
+		lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
 
-		for i, expr := range sub_exprs {
-			lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
-			lex.push(NewToken(OPEN_PAREN, "(", lex.get_file_pos()))
-			for _, tok := range expr {
-				if tok.Kind != EOF {
-					lex.push(tok)
-				}
-			}
+		lex.push(NewToken(STRING, strs[i+1], lex.get_file_pos()))
+	}
 
-			lex.push(NewToken(CLOSE_PAREN, ")", lex.get_file_pos()))
-
-			lex.push(NewToken(PLUS, "+", lex.get_file_pos()))
-
-			lex.push(NewToken(STRING, strs[i+1], lex.get_file_pos()))
-		} */
-
-	lex.push(NewToken(STRING, literal, lex.pos))
 	lex.advanceN(len(literal))
 }
 
-func symbolHandler(lex *Lexer, regex *regexp.Regexp) {
+func symbolHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindString(lex.remainder())
-	if kind, exists := reserved_lookup[match]; exists {
-		lex.push(NewToken(kind, match, lex.pos))
+	if kind, exists := reserved_lu[match]; exists {
+		lex.push(NewToken(kind, match, lex.get_file_pos()))
 	} else {
-		lex.push(NewToken(IDENTIFIER, match, lex.pos))
+		lex.push(NewToken(IDENTIFIER, match, lex.get_file_pos()))
 	}
 
 	lex.advanceN(len(match))
 }
 
-func skipHandler(lex *Lexer, regex *regexp.Regexp) {
+func skipHandler(lex *lexer, regex *regexp.Regexp) {
 	match := regex.FindStringIndex(lex.remainder())
 	lex.advanceN(match[1])
 }
