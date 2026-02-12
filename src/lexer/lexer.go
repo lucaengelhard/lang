@@ -55,6 +55,7 @@ func (lex *Lexer) panic(message string) {
 }
 
 func (lex *Lexer) Print() {
+	fmt.Printf("[Lexer]: %v Tokens\n", len(lex.Tokens))
 	for _, t := range lex.Tokens {
 		fmt.Printf("%s -> %s\n", t.Kind.ToString(), t.Literal)
 	}
