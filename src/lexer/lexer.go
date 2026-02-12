@@ -3,6 +3,8 @@ package lexer
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/lucaengelhard/lang/src/errorhandling"
 )
 
 type regexHandler func(lex *Lexer, regex *regexp.Regexp)
@@ -12,17 +14,12 @@ type regexPattern struct {
 	handler regexHandler
 }
 
-type LexerError struct {
-	Message  string
-	Position int
-}
-
 type Lexer struct {
 	patterns  []regexPattern
 	Tokens    []Token
 	source    string
 	pos       int
-	Errors    []LexerError
+	Errors    []errorhandling.Error
 	forceExit bool
 }
 
@@ -43,8 +40,8 @@ func (lex *Lexer) at_eof() bool {
 }
 
 func (lex *Lexer) err(message string) {
-	lex.Errors = append(lex.Errors, LexerError{
-		Message:  message,
+	lex.Errors = append(lex.Errors, errorhandling.Error{
+		Message:  "Lexer error -> " + message,
 		Position: lex.pos,
 	})
 }
@@ -85,7 +82,7 @@ func Tokenize(source string) *Lexer {
 
 func createLexer(source string) *Lexer {
 	InitTokenLookup()
-	return &Lexer{pos: 0, source: source, Tokens: make([]Token, 0), Errors: make([]LexerError, 0), patterns: []regexPattern{
+	return &Lexer{pos: 0, source: source, Tokens: make([]Token, 0), Errors: make([]errorhandling.Error, 0), patterns: []regexPattern{
 		{regexp.MustCompile(`\s+`), skipHandler},
 		{regexp.MustCompile(`\/\/.*`), skipHandler},
 		{regexp.MustCompile(`\/\*[\s\S]*?\*\/`), skipHandler},

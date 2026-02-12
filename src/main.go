@@ -12,8 +12,11 @@ func main() {
 	bytes, _ := os.ReadFile(os.Args[1])
 	source := string(bytes)
 
+	errors := make([]errorhandling.Error, 0)
+
 	// Tokenizing
 	lexer := lexer.Tokenize(source)
+	errors = append(errors, lexer.Errors...)
 
 	// AST-Building
 
@@ -22,5 +25,5 @@ func main() {
 	// Interpretation / Compilation
 
 	// Error handling
-	errorhandling.PrintErrors(source, lexer.Errors)
+	errorhandling.PrintErrors(source, errors)
 }
