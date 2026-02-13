@@ -6,7 +6,6 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
-	"github.com/lucaengelhard/lang/src/lib"
 	"github.com/sanity-io/litter"
 )
 
@@ -83,7 +82,7 @@ func Init(node any) {
 func interpret(node any, env *env) (any, any) {
 	var result any
 	var return_value any
-	switch node.(type) {
+	switch node := node.(type) {
 	case ast.BlockStmt:
 		return_value = interpret_block(node, env)
 	case ast.DeclarationStmt:
@@ -95,17 +94,13 @@ func interpret(node any, env *env) (any, any) {
 	case ast.SymbolExpr:
 		result = interpret_symbol_expr(node, env)
 	case ast.ExpressionStmt:
-		e, _ := lib.ExpectType[ast.ExpressionStmt](node)
-		result, _ = interpret(e.Expression, env)
+		result, _ = interpret(node.Expression, env)
 	case ast.IntExpr:
-		i, _ := lib.ExpectType[ast.IntExpr](node)
-		result = i.Value
+		result = node.Value
 	case ast.FloatExpr:
-		i, _ := lib.ExpectType[ast.FloatExpr](node)
-		result = i.Value
+		result = node.Value
 	case ast.StringExpr:
-		s, _ := lib.ExpectType[ast.StringExpr](node)
-		result = s.Value
+		result = node.Value
 	case ast.ArrayInstantiationExpr:
 		result = interpret_arr_instantiation(node, env)
 	case ast.BinaryExpr:
@@ -121,8 +116,7 @@ func interpret(node any, env *env) (any, any) {
 	case ast.WhileStmt:
 		return_value = interpret_while_stmt(node, env)
 	case ast.ReturnStmt:
-		stmt, _ := lib.ExpectType[ast.ReturnStmt](node)
-		return_value, _ = interpret(stmt.Value, env)
+		return_value, _ = interpret(node.Value, env)
 	default:
 		fmt.Printf("Unhandled: %s\n", reflect.TypeOf(node))
 		litter.Dump(node)
@@ -132,7 +126,7 @@ func interpret(node any, env *env) (any, any) {
 }
 
 func interpret_block(input any, env *env) any {
-	block, _ := lib.ExpectType[ast.BlockStmt](input)
+	block, _ := input.(ast.BlockStmt)
 	scope := createEnv(env)
 	for _, stmt := range block.Body {
 		_, return_value := interpret(stmt, scope)
@@ -145,14 +139,14 @@ func interpret_block(input any, env *env) any {
 }
 
 func interpret_declaration(input any, env *env) {
-	declaration, _ := lib.ExpectType[ast.DeclarationStmt](input)
+	declaration, _ := input.(ast.DeclarationStmt)
 	val, _ := interpret(declaration.AssignedValue, env)
 	env.set(declaration.Identifier, val, true, declaration.IsMutable)
 }
 
 func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
-	declaration, _ := lib.ExpectType[ast.FnDeclareExpr](input)
-	block, _ := lib.ExpectType[ast.BlockStmt](declaration.Body)
+	declaration, _ := input.(ast.FnDeclareExpr)
+	block := declaration.Body
 	position_arg_map := make([]ast.FnArg, len(declaration.Arguments))
 
 	for _, arg := range declaration.Arguments {
@@ -219,11 +213,11 @@ type FnCallArg struct {
 }
 
 func interpret_fn_call(input any, env *env) any {
-	call, _ := lib.ExpectType[ast.FnCallExpr](input)
-	caller_symbol, _ := lib.ExpectType[ast.SymbolExpr](call.Caller)
+	call, _ := input.(ast.FnCallExpr)
+	caller_symbol := call.Caller.(ast.SymbolExpr)
 
 	declaration, _ := env.get(caller_symbol.Value)
-	fn, _ := lib.ExpectType[func(args ...FnCallArg) any](declaration.Value)
+	fn, _ := declaration.Value.(func(args ...FnCallArg) any)
 
 	args := make([]FnCallArg, 0)
 
@@ -234,7 +228,7 @@ func interpret_fn_call(input any, env *env) any {
 
 		switch arg.Value.(type) {
 		case ast.SymbolExpr:
-			symbol, _ := lib.ExpectType[ast.SymbolExpr](arg.Value)
+			symbol, _ := arg.Value.(ast.SymbolExpr)
 
 			if symbol.IsReference {
 				reference, _ = env.get(symbol.Value)
@@ -252,8 +246,8 @@ func interpret_fn_call(input any, env *env) any {
 }
 
 func interpret_assignment(input any, env *env) {
-	assignment, _ := lib.ExpectType[ast.AssignmentExpr](input)
-	assignee, _ := lib.ExpectType[ast.SymbolExpr](assignment.Assignee)
+	assignment, _ := input.(ast.AssignmentExpr)
+	assignee, _ := assignment.Assignee.(ast.SymbolExpr)
 	right_result, _ := interpret(assignment.Right, env)
 
 	current, error := env.get(assignee.Value)
@@ -273,7 +267,7 @@ func interpret_assignment(input any, env *env) {
 }
 
 func interpret_symbol_expr(input any, env *env) any {
-	symbol, _ := lib.ExpectType[ast.SymbolExpr](input)
+	symbol, _ := input.(ast.SymbolExpr)
 	value, err := env.get(symbol.Value)
 
 	if err != nil {
@@ -284,7 +278,7 @@ func interpret_symbol_expr(input any, env *env) any {
 }
 
 func interpret_binary_exp(input any, env *env) any {
-	expression, _ := lib.ExpectType[ast.BinaryExpr](input)
+	expression, _ := input.(ast.BinaryExpr)
 	left_result, _ := interpret(expression.Left, env)
 	right_result, _ := interpret(expression.Right, env)
 
@@ -292,7 +286,7 @@ func interpret_binary_exp(input any, env *env) any {
 }
 
 func interpret_prefix_expr(input any, env *env) any {
-	expression, _ := lib.ExpectType[ast.PrefixExpr](input)
+	expression, _ := input.(ast.PrefixExpr)
 	right_result, _ := interpret(expression.Right, env)
 
 	switch expression.Operator.Kind {
@@ -307,10 +301,10 @@ func interpret_prefix_expr(input any, env *env) any {
 
 func interpret_if_stmt(input any, env *env) any {
 	var return_value any
-	stmt, _ := lib.ExpectType[ast.IfStmt](input)
+	stmt, _ := input.(ast.IfStmt)
 
 	cond, _ := interpret(stmt.Condition, env)
-	decision, _ := lib.ExpectType[bool](cond)
+	decision, _ := cond.(bool)
 
 	if decision {
 		_, return_value = interpret(stmt.True, env)
@@ -322,7 +316,7 @@ func interpret_if_stmt(input any, env *env) any {
 }
 
 func interpret_for_stmt(input any, env *env) any {
-	stmt, _ := lib.ExpectType[ast.ForStmt](input)
+	stmt, _ := input.(ast.ForStmt)
 	scope := createEnv(env)
 
 	interpret(stmt.Assignment, scope)
@@ -330,7 +324,7 @@ func interpret_for_stmt(input any, env *env) any {
 	var ret any
 	for true {
 		result, _ := interpret(stmt.Condition, scope)
-		condition, _ := lib.ExpectType[bool](result)
+		condition, _ := result.(bool)
 
 		if !condition {
 			break
@@ -350,13 +344,13 @@ func interpret_for_stmt(input any, env *env) any {
 }
 
 func interpret_while_stmt(input any, env *env) any {
-	stmt, _ := lib.ExpectType[ast.WhileStmt](input)
+	stmt, _ := input.(ast.WhileStmt)
 	scope := createEnv(env)
 
 	var ret any
 	for true {
 		result, _ := interpret(stmt.Condition, scope)
-		condition, _ := lib.ExpectType[bool](result)
+		condition, _ := result.(bool)
 
 		if !condition {
 			break
@@ -374,7 +368,7 @@ func interpret_while_stmt(input any, env *env) any {
 }
 
 func interpret_arr_instantiation(input any, env *env) any {
-	arr, _ := lib.ExpectType[ast.ArrayInstantiationExpr](input)
+	arr, _ := input.(ast.ArrayInstantiationExpr)
 
 	res := make([]any, 0)
 

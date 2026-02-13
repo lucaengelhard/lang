@@ -2,11 +2,11 @@ package parser
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
-	"github.com/lucaengelhard/lang/src/lib"
 )
 
 func parse_expr(p *parser, bp binding_power) ast.Expr {
@@ -15,7 +15,8 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 	nud_fn, exists := nud_lu[tokenKind]
 
 	if !exists {
-		p.panic(fmt.Sprintf("Unexpected token (nud) near: %s (%s)\n", tokenKind.ToString(), token.Value))
+		p.addErr(fmt.Sprintf("Unexpected token (nud) near: %s (%s)\n", tokenKind.ToString(), token.Literal))
+		return nil
 	}
 
 	left := nud_fn(p)
@@ -25,7 +26,8 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 		led_fn, exists := led_lu[tokenKind]
 
 		if !exists {
-			p.panic(fmt.Sprintf("Unexpected token (led) near: %s (%s)\n", tokenKind.ToString(), token.Value))
+			p.addErr(fmt.Sprintf("Unexpected token (led) near: %s (%s)\n", tokenKind.ToString(), token.Literal))
+			return nil
 		}
 
 		left = led_fn(p, left, bp_lu[p.currentTokenKind()])
@@ -49,7 +51,7 @@ func parse_boolean_expr(p *parser) ast.Expr {
 }
 
 func parse_number_expr(p *parser) ast.Expr {
-	val := p.advance().Value
+	val := p.advance().Literal
 	if i, err := strconv.ParseInt(val, 10, 64); err == nil {
 		return ast.IntExpr{
 			Value: i,
@@ -63,7 +65,7 @@ func parse_number_expr(p *parser) ast.Expr {
 }
 
 func parse_string_expr(p *parser) ast.Expr {
-	literal := p.advance().Value
+	literal := p.advance().Literal
 	return ast.StringExpr{Value: literal}
 }
 
@@ -73,7 +75,7 @@ func parse_symbol_expr(p *parser) ast.Expr {
 		p.advance()
 	}
 
-	return ast.SymbolExpr{Value: p.advance().Value, IsReference: isReference}
+	return ast.SymbolExpr{Value: p.advance().Literal, IsReference: isReference}
 }
 
 func parse_binary_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
@@ -127,19 +129,20 @@ func parse_grouping_expr(p *parser) ast.Expr {
 }
 
 func parse_struct_instantiation_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
-	symbol, err := lib.ExpectType[ast.SymbolExpr](left)
-	structIdentifier := symbol.Value
+	symbol, ok := left.(ast.SymbolExpr)
 
-	if err != nil {
-		p.addErr(err.Error())
+	if !ok {
+		p.addErr(fmt.Sprintf("Type error: Expected %s got %s", reflect.TypeFor[ast.SymbolExpr](), reflect.TypeOf(symbol)))
 	}
+
+	structIdentifier := symbol.Value
 
 	var properties = map[string]ast.Expr{}
 
 	p.expect(lexer.OPEN_CURLY)
 
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		propertyName := p.expect(lexer.IDENTIFIER).Value
+		propertyName := p.expect(lexer.IDENTIFIER).Literal
 		p.expect(lexer.COLON)
 		expr := parse_expr(p, logical)
 
@@ -184,7 +187,7 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 		var argumentIdentifier string
 
 		if p.peekNextKind() == lexer.COLON {
-			argumentIdentifier = p.expect(lexer.IDENTIFIER).Value
+			argumentIdentifier = p.expect(lexer.IDENTIFIER).Literal
 			p.advance()
 		}
 
@@ -237,7 +240,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 			p.advance()
 		}
 
-		argumentIdentifier := p.expect(lexer.IDENTIFIER).Value
+		argumentIdentifier := p.expect(lexer.IDENTIFIER).Literal
 		if p.currentTokenKind() == lexer.COLON {
 			p.advance()
 			explicitType = parse_type(p, default_bp)

@@ -1,8 +1,6 @@
 package parser
 
 import (
-	"fmt"
-
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
 )
@@ -41,7 +39,7 @@ func parse_declaration_stmt(p *parser) ast.Stmt {
 	var explicitType ast.Type
 
 	isMutable := p.nextIsKind(lexer.MUT)
-	identifier := p.expect(lexer.IDENTIFIER).Value
+	identifier := p.expect(lexer.IDENTIFIER).Literal
 
 	if p.currentTokenKind() == lexer.COLON {
 		p.advance()
@@ -61,9 +59,11 @@ func parse_declaration_stmt(p *parser) ast.Stmt {
 }
 
 func parse_struct_properties(p *parser) map[string]ast.StructProperty {
-	var properties = map[string]ast.StructProperty{}
+	//var properties = map[string]ast.StructProperty{}
 
-	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+	panic("I Broke structs :(")
+
+	/* for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
 		if p.currentTokenKind() == lexer.IDENTIFIER || lexer.IsReserved(p.currentToken().Value) {
 			var propertyModifiers = map[string]ast.StructPropertyModifier{}
 			for lexer.IsReserved(p.currentToken().Value) {
@@ -95,13 +95,13 @@ func parse_struct_properties(p *parser) map[string]ast.StructProperty {
 
 		p.addErr("This souldn't be reached :( so i wrote bad struct code")
 	}
-
-	return properties
+	*/
+	//return properties
 }
 
 func parse_struct_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.STRUCT)
-	identifier := p.expect(lexer.IDENTIFIER).Value
+	identifier := p.expect(lexer.IDENTIFIER).Literal
 	var typeArg ast.Type
 
 	if p.currentTokenKind() == lexer.LESS {
@@ -125,7 +125,7 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 
 func parse_interface_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.INTERFACE)
-	identifier := p.expect(lexer.IDENTIFIER).Value
+	identifier := p.expect(lexer.IDENTIFIER).Literal
 	var typeArg ast.Type
 
 	if p.currentTokenKind() == lexer.LESS {
@@ -158,14 +158,14 @@ func parse_interface_stmt(p *parser) ast.Stmt {
 
 func parse_enum_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.ENUM)
-	identifier := p.expect(lexer.IDENTIFIER).Value
+	identifier := p.expect(lexer.IDENTIFIER).Literal
 	var elements = map[string]int{}
 
 	p.expect(lexer.OPEN_CURLY)
 
 	var iota = 0
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		elements[p.expect(lexer.IDENTIFIER).Value] = iota
+		elements[p.expect(lexer.IDENTIFIER).Literal] = iota
 		iota++
 		if p.currentTokenKind() != lexer.CLOSE_CURLY {
 			p.expect(lexer.COMMA)
@@ -185,7 +185,7 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 	identifier := p.expect(lexer.IDENTIFIER)
 
 	return ast.DeclarationStmt{
-		Identifier:    identifier.Value,
+		Identifier:    identifier.Literal,
 		IsMutable:     false,
 		AssignedValue: parse_fn_declare_expr(p),
 	}
@@ -276,7 +276,7 @@ func parse_break_stmt(p *parser) ast.Stmt {
 
 func parse_import_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.IMPORT)
-	path := p.expect(lexer.STRING).Value
+	path := p.expect(lexer.STRING).Literal
 	p.expect(lexer.R_ARROW)
 
 	var identifier string
@@ -285,7 +285,7 @@ func parse_import_stmt(p *parser) ast.Stmt {
 	if p.currentTokenKind() == lexer.OPEN_CURLY {
 		p.advance()
 		for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-			items = append(items, p.expect(lexer.IDENTIFIER).Value)
+			items = append(items, p.expect(lexer.IDENTIFIER).Literal)
 
 			if p.currentTokenKind() != lexer.CLOSE_CURLY {
 				p.expect(lexer.COMMA)
@@ -293,7 +293,7 @@ func parse_import_stmt(p *parser) ast.Stmt {
 		}
 		p.expect(lexer.CLOSE_CURLY)
 	} else {
-		identifier = p.expect(lexer.IDENTIFIER).Value
+		identifier = p.expect(lexer.IDENTIFIER).Literal
 	}
 
 	return ast.ImportStmt{

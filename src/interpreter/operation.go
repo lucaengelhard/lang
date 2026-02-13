@@ -28,8 +28,8 @@ func create_binop[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R
 	}
 
 	binop_lu[token][reflect.TypeFor[L]()][reflect.TypeFor[R]()] = func(l, r any) any {
-		valid_l, _ := lib.ExpectType[L](l)
-		valid_r, _ := lib.ExpectType[R](r)
+		valid_l, _ := l.(L)
+		valid_r, _ := r.(R)
 
 		return op(valid_l, valid_r)
 	}
