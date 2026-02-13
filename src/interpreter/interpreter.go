@@ -75,7 +75,7 @@ func createEnv(parent *env) *env {
 
 func Init(node any) {
 	createOpLookup()
-
+	//TODO: Error handling with breaking and not breaking
 	interpret(node, createStdEnv())
 }
 
