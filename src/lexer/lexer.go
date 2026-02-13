@@ -58,7 +58,7 @@ func (lex *Lexer) Print() {
 	}
 }
 
-func Tokenize(source string) *Lexer {
+func Tokenize(source string) ([]Token, []errorhandling.Error) {
 	lex := createLexer(source)
 
 	for !lex.at_eof() && !lex.forceExit {
@@ -77,7 +77,7 @@ func Tokenize(source string) *Lexer {
 	}
 
 	lex.push(NewToken(EOF, "EOF", lex.pos))
-	return lex
+	return lex.Tokens, lex.Errors
 }
 
 func createLexer(source string) *Lexer {

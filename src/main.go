@@ -5,6 +5,8 @@ import (
 
 	"github.com/lucaengelhard/lang/src/errorhandling"
 	"github.com/lucaengelhard/lang/src/lexer"
+	"github.com/lucaengelhard/lang/src/parser"
+	"github.com/sanity-io/litter"
 )
 
 func main() {
@@ -12,13 +14,18 @@ func main() {
 	bytes, _ := os.ReadFile(os.Args[1])
 	source := string(bytes)
 
+	// Create errors
 	errors := make([]errorhandling.Error, 0)
 
 	// Tokenizing
-	lexer := lexer.Tokenize(source)
-	errors = append(errors, lexer.Errors...)
+	tokens, lexer_errors := lexer.Tokenize(source)
+	errors = append(errors, lexer_errors...)
 
 	// AST-Building
+	ast, parser_errors := parser.Parse(tokens)
+	errors = append(errors, parser_errors...)
+
+	litter.D(ast)
 
 	// Typechecking and updating of ast
 
