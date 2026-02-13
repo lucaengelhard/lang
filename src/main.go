@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/errorhandling"
 	"github.com/lucaengelhard/lang/src/interpreter"
 	"github.com/lucaengelhard/lang/src/lexer"
@@ -24,13 +25,19 @@ func main() {
 	errors = append(errors, lexer_errors...)
 
 	// AST-Building
-	ast, parser_errors := parser.Parse(tokens)
-	errors = append(errors, parser_errors...)
+	var ast ast.Stmt
+	var parser_errors []errorhandling.Error
+	if len(errors) == 0 {
+		ast, parser_errors = parser.Parse(tokens)
+		errors = append(errors, parser_errors...)
+	}
 
 	// Typechecking and updating of ast
 
 	// Interpretation / Compilation
-	interpreter.Init(ast)
+	if len(errors) == 0 {
+		interpreter.Init(ast)
+	}
 
 	// Error handling
 	errorhandling.PrintErrors(source, errors)
