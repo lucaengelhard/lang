@@ -41,12 +41,10 @@ func led(kind lexer.TokenKind, bp binding_power, led_fn led_handler) {
 }
 
 func nud(kind lexer.TokenKind, nud_fn nud_handler) {
-	bp_lu[kind] = primary
 	nud_lu[kind] = nud_fn
 }
 
 func stmt(kind lexer.TokenKind, stmt_fn stmt_handler) {
-	bp_lu[kind] = default_bp
 	stmt_lu[kind] = stmt_fn
 }
 
