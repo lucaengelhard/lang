@@ -15,7 +15,7 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 	nud_fn, exists := nud_lu[tokenKind]
 
 	if !exists {
-		p.addErr(fmt.Sprintf("Unexpected token (nud) near: %s (%s)\n", tokenKind.ToString(), token.Literal))
+		p.err(fmt.Sprintf("Unexpected token (nud) near: %s (%s)\n", tokenKind.ToString(), token.Literal))
 		return nil
 	}
 
@@ -26,7 +26,7 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 		led_fn, exists := led_lu[tokenKind]
 
 		if !exists {
-			p.addErr(fmt.Sprintf("Unexpected token (led) near: %s (%s)\n", tokenKind.ToString(), token.Literal))
+			p.err(fmt.Sprintf("Unexpected token (led) near: %s (%s)\n", tokenKind.ToString(), token.Literal))
 			return nil
 		}
 
@@ -45,7 +45,7 @@ func parse_boolean_expr(p *parser) ast.Expr {
 		p.advance()
 		return ast.BoolExpr{Value: false}
 	default:
-		p.addErr(fmt.Sprintf("Cannot create boolean expression from %s\n", p.currentTokenKind().ToString()))
+		p.err(fmt.Sprintf("Cannot create boolean expression from %s\n", p.currentTokenKind().ToString()))
 		return ast.UnknowPrimary{}
 	}
 }
@@ -132,7 +132,7 @@ func parse_struct_instantiation_expr(p *parser, left ast.Expr, bp binding_power)
 	symbol, ok := left.(ast.SymbolExpr)
 
 	if !ok {
-		p.addErr(fmt.Sprintf("Type error: Expected %s got %s", reflect.TypeFor[ast.SymbolExpr](), reflect.TypeOf(symbol)))
+		p.err(fmt.Sprintf("Type error: Expected %s got %s", reflect.TypeFor[ast.SymbolExpr](), reflect.TypeOf(symbol)))
 	}
 
 	structIdentifier := symbol.Value
@@ -249,7 +249,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		_, exists := arguments[argumentIdentifier]
 
 		if exists {
-			p.addErr(fmt.Sprintf("Argument %s already exists in function", argumentIdentifier))
+			p.err(fmt.Sprintf("Argument %s already exists in function", argumentIdentifier))
 		}
 
 		arguments[argumentIdentifier] = ast.FnArg{

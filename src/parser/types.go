@@ -44,7 +44,7 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 	nud_fn, exists := type_nud_lu[tokenKind]
 
 	if !exists {
-		p.addErr(fmt.Sprintf("Type Nud handler expected for token %s\n", tokenKind.ToString()))
+		p.err(fmt.Sprintf("Type Nud handler expected for token %s\n", tokenKind.ToString()))
 		return nil
 	}
 
@@ -55,7 +55,7 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 		led_fn, exists := type_led_lu[tokenKind]
 
 		if !exists {
-			p.addErr(fmt.Sprintf("Type Led handler expected for token %s\n", tokenKind.ToString()))
+			p.err(fmt.Sprintf("Type Led handler expected for token %s\n", tokenKind.ToString()))
 			return nil
 		}
 
@@ -81,7 +81,7 @@ func parse_number_type(p *parser) ast.Type {
 		}
 	}
 
-	p.addErr(fmt.Sprintf("Only integers allowed in Number Types %s", val))
+	p.err(fmt.Sprintf("Only integers allowed in Number Types %s", val))
 	return ast.UnkownType{}
 }
 
@@ -89,7 +89,7 @@ func parse_generic_type(p *parser, left ast.Type, bp binding_power) ast.Type {
 	symbol, ok := left.(ast.SymbolType)
 
 	if !ok {
-		p.addErr(fmt.Sprintf("Type error: Expected %s got %s", reflect.TypeFor[ast.SymbolExpr](), reflect.TypeOf(symbol)))
+		p.err(fmt.Sprintf("Type error: Expected %s got %s", reflect.TypeFor[ast.SymbolExpr](), reflect.TypeOf(symbol)))
 		return nil
 	}
 
@@ -136,7 +136,7 @@ func parse_fn_type(p *parser) ast.Type {
 		_, exists := arguments[argumentIdentifier]
 
 		if exists {
-			p.addErr(fmt.Sprintf("Argument %s already exists in function type", argumentIdentifier))
+			p.err(fmt.Sprintf("Argument %s already exists in function type", argumentIdentifier))
 		}
 
 		arguments[argumentIdentifier] = ast.FnArg{

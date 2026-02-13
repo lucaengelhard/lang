@@ -60,9 +60,13 @@ func (p *parser) currentTokenKind() lexer.TokenKind {
 	return p.currentToken().Kind
 }
 
-func (p *parser) addErr(msg string) {
+func (p *parser) err(msg string) {
 	token := p.currentToken()
-	p.errors = append(p.errors, errorhandling.Error{Message: "Parser error -> " + msg, Position: token.Position})
+	p.errors = append(p.errors, errorhandling.Error{
+		Message:      "Parser error -> " + msg,
+		Position:     token.Position,
+		TokenLiteral: token.Literal,
+	})
 }
 
 func (p *parser) expectError(expected lexer.TokenKind, msg any) lexer.Token {
@@ -73,7 +77,7 @@ func (p *parser) expectError(expected lexer.TokenKind, msg any) lexer.Token {
 		if msg == nil {
 			msg = fmt.Sprintf("Expected token %s but recieved %s instead", expected.ToString(), kind.ToString())
 		}
-		p.addErr(fmt.Sprintf("%v", msg))
+		p.err(fmt.Sprintf("%v", msg))
 	}
 
 	return p.advance()

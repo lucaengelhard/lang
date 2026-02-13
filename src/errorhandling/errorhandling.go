@@ -7,8 +7,9 @@ import (
 )
 
 type Error struct {
-	Message  string
-	Position int
+	Message      string
+	Position     int
+	TokenLiteral string
 }
 
 func PrintErrors(source string, errors []Error) {
