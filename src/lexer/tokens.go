@@ -15,6 +15,11 @@ func (token Token) Is(kinds ...TokenKind) bool {
 	return slices.Contains(kinds, token.Kind)
 }
 
+func (token Token) IsReserved() bool {
+	_, exist := reserved_lookup[token.Literal]
+	return exist
+}
+
 func NewToken(kind TokenKind, literal string, position int) Token {
 	return Token{Kind: kind, Literal: literal, Position: position}
 }

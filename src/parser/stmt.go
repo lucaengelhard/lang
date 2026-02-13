@@ -64,42 +64,32 @@ func parse_struct_properties(p *parser) map[string]ast.StructProperty {
 	var properties = map[string]ast.StructProperty{}
 
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		ident := p.expect(lexer.IDENTIFIER)
-		fmt.Println(ident.Literal)
-		//var propertyModifiers = map[string]ast.StructPropertyModifier{}
+		var prop_mods = map[string]ast.StructPropertyModifier{}
 
-		//for lexer.
-
-		/* if p.currentTokenKind() == lexer.IDENTIFIER || lexer.IsReserved(p.currentToken().Literal) {
-			var propertyModifiers = map[string]ast.StructPropertyModifier{}
-			for lexer.IsReserved(p.currentToken().Value) {
-				propertyModifiers[p.currentToken().Value] = ast.StructPropertyModifier{
-					Name: p.currentToken().Value,
-				}
-				p.advance()
+		for p.hasTokens() && p.currentToken().IsReserved() {
+			tok := p.currentToken()
+			prop_mods[tok.Literal] = ast.StructPropertyModifier{
+				Name: tok.Literal,
 			}
-
-			propertyName := p.expect(lexer.IDENTIFIER).Value
-			p.expect(lexer.COLON)
-			propertyType := parse_type(p, default_bp)
-			p.expect(lexer.SEMI_COLON)
-
-			_, exists := properties[propertyName]
-
-			if exists {
-				p.addErr(fmt.Sprintf("Property %s already exists on struct", propertyName))
-			}
-
-			properties[propertyName] = ast.StructProperty{
-				Name:      propertyName,
-				Type:      propertyType,
-				Modifiers: propertyModifiers,
-			}
-
-			continue
+			p.advance()
 		}
 
-		p.err("This souldn't be reached :( so i wrote bad struct code") */
+		prop_name := p.expect(lexer.IDENTIFIER).Literal
+		p.expect(lexer.COLON)
+		prop_type := parse_type(p, default_bp)
+		p.expect(lexer.SEMI_COLON)
+
+		_, exists := properties[prop_name]
+
+		if exists {
+			p.err(fmt.Sprintf("Property %s already exists on struct", prop_name))
+		}
+
+		properties[prop_name] = ast.StructProperty{
+			Name:      prop_name,
+			Type:      prop_type,
+			Modifiers: prop_mods,
+		}
 	}
 
 	return properties
