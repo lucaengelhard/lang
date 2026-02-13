@@ -1,6 +1,5 @@
 # Todo
 
-- Rewrite with better information passing
 - Arrays
 - Array access
 - std functions (casting, sorting maybe?)
