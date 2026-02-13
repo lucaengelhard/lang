@@ -73,7 +73,7 @@ func (n WhileStmt) stmt() {}
 type ForStmt struct {
 	Assignment Stmt
 	Condition  Stmt
-	Increment  Stmt
+	Increment  Expr
 	Body       BlockStmt
 }
 

@@ -16,9 +16,7 @@ func parse_stmt(p *parser) ast.Stmt {
 
 	expression := parse_expr(p, default_bp)
 
-	if p.currentTokenKind() == lexer.SEMI_COLON {
-		p.advance()
-	}
+	p.expect(lexer.SEMI_COLON)
 
 	return ast.ExpressionStmt{
 		Expression: expression,
@@ -233,7 +231,7 @@ func parse_for_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.OPEN_PAREN)
 	assignemt := parse_stmt(p)
 	cond := parse_stmt(p)
-	incr := parse_stmt(p)
+	incr := parse_expr(p, default_bp)
 	p.expect(lexer.CLOSE_PAREN)
 
 	p.expect(lexer.OPEN_CURLY)
