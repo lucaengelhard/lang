@@ -1,17 +1,25 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	"github.com/lucaengelhard/lang/src/errorhandling"
 	"github.com/lucaengelhard/lang/src/interpreter"
 	"github.com/lucaengelhard/lang/src/lexer"
 	"github.com/lucaengelhard/lang/src/parser"
+	"github.com/sanity-io/litter"
 )
 
 func main() {
+	// Args
+	source_path := flag.String("source", os.Args[1], "Source File")
+	interpret := flag.Bool("interpret", true, "Set interpretation flag")
+	debug := flag.Bool("debug", true, "Enable debugging")
+	flag.Parse()
+
 	// Reading file
-	bytes, _ := os.ReadFile(os.Args[1])
+	bytes, _ := os.ReadFile(*source_path)
 	source := string(bytes)
 
 	// Create errors
@@ -28,7 +36,13 @@ func main() {
 	// Typechecking and updating of ast
 
 	// Interpretation / Compilation
-	interpreter.Init(ast)
+	if *interpret {
+		interpreter.Init(ast)
+	}
+
+	if *debug {
+		litter.D(ast)
+	}
 
 	// Error handling
 	errorhandling.PrintErrors(source, errors)

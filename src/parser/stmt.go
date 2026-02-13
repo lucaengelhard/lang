@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
 )
@@ -59,12 +61,16 @@ func parse_declaration_stmt(p *parser) ast.Stmt {
 }
 
 func parse_struct_properties(p *parser) map[string]ast.StructProperty {
-	//var properties = map[string]ast.StructProperty{}
+	var properties = map[string]ast.StructProperty{}
 
-	panic("I Broke structs :(")
+	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
+		ident := p.expect(lexer.IDENTIFIER)
+		fmt.Println(ident.Literal)
+		//var propertyModifiers = map[string]ast.StructPropertyModifier{}
 
-	/* for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
-		if p.currentTokenKind() == lexer.IDENTIFIER || lexer.IsReserved(p.currentToken().Value) {
+		//for lexer.
+
+		/* if p.currentTokenKind() == lexer.IDENTIFIER || lexer.IsReserved(p.currentToken().Literal) {
 			var propertyModifiers = map[string]ast.StructPropertyModifier{}
 			for lexer.IsReserved(p.currentToken().Value) {
 				propertyModifiers[p.currentToken().Value] = ast.StructPropertyModifier{
@@ -93,10 +99,10 @@ func parse_struct_properties(p *parser) map[string]ast.StructProperty {
 			continue
 		}
 
-		p.addErr("This souldn't be reached :( so i wrote bad struct code")
+		p.err("This souldn't be reached :( so i wrote bad struct code") */
 	}
-	*/
-	//return properties
+
+	return properties
 }
 
 func parse_struct_stmt(p *parser) ast.Stmt {
