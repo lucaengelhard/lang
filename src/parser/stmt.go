@@ -7,7 +7,7 @@ import (
 	"github.com/lucaengelhard/lang/src/lexer"
 )
 
-func parse_stmt(p *parser, with_semicolon ...bool) ast.Stmt {
+func parse_stmt(p *parser) ast.Stmt {
 	stmt_fn, exists := stmt_lu[p.currentTokenKind()]
 
 	if exists {
@@ -16,8 +16,8 @@ func parse_stmt(p *parser, with_semicolon ...bool) ast.Stmt {
 
 	expression := parse_expr(p, default_bp)
 
-	if (len(with_semicolon) > 0 && with_semicolon[0]) || len(with_semicolon) == 0 {
-		p.expect(lexer.SEMI_COLON)
+	if p.currentTokenKind() == lexer.SEMI_COLON {
+		p.advance()
 	}
 
 	return ast.ExpressionStmt{
@@ -233,7 +233,7 @@ func parse_for_stmt(p *parser) ast.Stmt {
 	p.expect(lexer.OPEN_PAREN)
 	assignemt := parse_stmt(p)
 	cond := parse_stmt(p)
-	incr := parse_stmt(p, false)
+	incr := parse_stmt(p)
 	p.expect(lexer.CLOSE_PAREN)
 
 	p.expect(lexer.OPEN_CURLY)
