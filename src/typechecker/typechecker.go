@@ -89,7 +89,7 @@ func check(node any, env *env) ast.Type {
 		computed := check(node.AssignedValue, env)
 
 		if !node.Type.IsUnset() && !reflect.DeepEqual(node.Type, computed) {
-			set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s", node.Type.Name, computed.Name))
+			set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s", node.Type.ToString(), computed.ToString()))
 			return ast.CreateUnsetType()
 		}
 
