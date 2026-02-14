@@ -40,8 +40,8 @@ func (p *parser) printCurrentToken() {
 
 func (p *parser) curentTokenPosition() ast.Position {
 	return ast.Position{
-		Start: p.index,
-		End:   p.index + len(p.currentToken().Literal),
+		Start: p.currentToken().Position,
+		End:   p.currentToken().Position + len(p.currentToken().Literal),
 	}
 }
 

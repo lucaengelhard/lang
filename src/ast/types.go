@@ -58,12 +58,3 @@ func (t Type) ToString() string {
 
 	return t.Name + arg_string.String()
 }
-
-type Position struct {
-	Start int
-	End   int
-}
-
-func CreatePosition(start int, end int) Position {
-	return Position{Start: start, End: end}
-}
