@@ -83,6 +83,7 @@ const (
 	COMMA
 	COLON
 	QUESTION
+	AMPERSAND
 	SPREAD
 
 	// Keywords
@@ -172,6 +173,7 @@ var token_string_lookup = map[TokenKind]string{
 	COLON:          "colon",
 	QUESTION:       "question",
 	COMMA:          "comma",
+	AMPERSAND:      "ampersand",
 	SPREAD:         "spread",
 }
 

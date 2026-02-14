@@ -38,11 +38,19 @@ type StringExpr struct {
 func (n StringExpr) expr() {}
 
 type SymbolExpr struct {
-	Value string
+	Value       string
+	IsReference bool
 	Position
 }
 
 func (n SymbolExpr) expr() {}
+
+type DerefExpr struct {
+	Ref Expr
+	Position
+}
+
+func (n DerefExpr) expr() {}
 
 type UnknowPrimary struct{ Position }
 

@@ -75,8 +75,14 @@ func parse_string_expr(p *parser) ast.Expr {
 }
 
 func parse_symbol_expr(p *parser) ast.Expr {
+	var isReference = false
+	if p.currentTokenKind() == lexer.AMPERSAND {
+		isReference = true
+		p.advance()
+	}
+
 	pos := p.curentTokenPosition()
-	return ast.SymbolExpr{Value: p.advance().Literal, Position: pos}
+	return ast.SymbolExpr{Value: p.advance().Literal, Position: pos, IsReference: isReference}
 }
 
 func parse_binary_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
@@ -322,6 +328,16 @@ func parse_is_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 	return ast.IsTypeExpr{
 		Left:     left,
 		Right:    right,
+		Position: pos,
+	}
+}
+
+func parse_deref_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
+
+	p.expect(lexer.STAR)
+	return ast.DerefExpr{
+		Ref:      parse_expr(p, default_bp),
 		Position: pos,
 	}
 }

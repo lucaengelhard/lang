@@ -48,7 +48,7 @@ func createHandlerLookup() {
 	add_handler(return_handler)
 	add_handler(if_handler)
 	add_handler(fn_call_handler)
-
+	add_handler(deref_handler)
 }
 
 type handler func(node any, env *env) ast.Type
@@ -105,6 +105,10 @@ func symbol_handler(node ast.SymbolExpr, env *env) ast.Type {
 	if err != nil {
 		set_err(node.Position, err.Error())
 		return ast.CreateUnsetType()
+	}
+
+	if node.IsReference {
+		return ast.Type{Name: ast.REFERENCE, Arguments: []ast.Type{val.Value}}
 	}
 
 	return val.Value
@@ -357,6 +361,12 @@ func fn_call_handler(node ast.FnCallExpr, env *env) ast.Type {
 
 func return_handler(node ast.ReturnStmt, env *env) ast.Type {
 	return check(node.Value, env)
+}
+
+func deref_handler(node ast.DerefExpr, env *env) ast.Type {
+	ref := check(node.Ref, env)
+
+	return ref.Arguments[0]
 }
 
 func if_handler(node ast.IfStmt, env *env) ast.Type {
