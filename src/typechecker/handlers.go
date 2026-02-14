@@ -110,6 +110,7 @@ func binary_expr_handler(node ast.BinaryExpr, env *env) ast.Type {
 
 func declaration_handler(node ast.DeclarationStmt, env *env) ast.Type {
 	computed := check(node.AssignedValue, env)
+	var assigned_type = ast.CreateUnsetType()
 
 	// TODO: make more sophisticated equality check, so that order of array doesn't matter for example
 	// Also partial matching doesn't work
@@ -119,42 +120,55 @@ func declaration_handler(node ast.DeclarationStmt, env *env) ast.Type {
 	}
 
 	if node.Type.IsUnset() {
-		env.set(node.Identifier, computed, true, node.IsMutable)
+		assigned_type = computed
 	} else {
-		env.set(node.Identifier, env.get_type(node.Type.Name), true, node.IsMutable)
+		assigned_type = env.get_type(node.Type.Name)
 	}
+
+	if node.IsMutable {
+		assigned_type = assigned_type.Mutable()
+	}
+
+	env.set(node.Identifier, assigned_type, true, node.IsMutable)
 
 	return ast.CreateUnsetType()
 }
 
 func assignment_handler(node ast.AssignmentExpr, env *env) ast.Type {
 	assignee := node.Assignee.(ast.SymbolExpr)
-	right := check(node.Right, env)
-
-	current, err := env.get(assignee.Value)
+	current_declaration, err := env.get(assignee.Value)
 
 	if err != nil {
 		set_err(node.Position, err.Error())
 		return ast.CreateUnsetType()
 	}
 
+	if !current_declaration.Value.Is(ast.MUTABLE) {
+		set_err(node.Position, fmt.Sprintf("%s is not mutable", assignee.Value))
+		return ast.CreateUnsetType()
+	}
+
+	stripped_current := current_declaration.Value.Arguments[0]
+
+	right := check(node.Right, env)
+
 	op_token, op_token_exists := lexer.Assignment_operation_lu[node.Operator.Kind]
 
 	if op_token_exists {
-		computed, err := exec_type_op(op_token, current.Value, right)
+		computed, err := exec_type_op(op_token, stripped_current, right)
 
 		if err != nil {
-			set_err(node.Position, fmt.Sprintf("Type %s is not assignable to variable of type %s (%s)", right.ToString(), current.Value.ToString(), err.Error()))
+			set_err(node.Position, fmt.Sprintf("Type %s is not assignable to variable of type %s (%s)", right.ToString(), stripped_current.ToString(), err.Error()))
 			return ast.CreateUnsetType()
 		}
 
-		err = env.set(assignee.Value, computed, false, false)
+		err = env.set(assignee.Value, computed.Mutable(), false, false)
 
 		if err != nil {
 			set_err(node.Position, err.Error())
 		}
 	} else if node.Operator.Kind == lexer.ASSIGNMENT {
-		err = env.set(assignee.Value, right, false, false)
+		err = env.set(assignee.Value, right.Mutable(), false, false)
 
 		if err != nil {
 			set_err(node.Position, err.Error())
@@ -312,6 +326,7 @@ func fn_call_handler(node ast.FnCallExpr, env *env) ast.Type {
 			for index, arg := range node.Arguments {
 				expected := type_arg.Arguments[index].Arguments[0]
 				computed := check(arg.Value, env)
+
 				if !match(expected, computed) {
 					set_err(node.Position, fmt.Sprintf("Mismatched argument (%d). Expected %s, got %s", index, expected.ToString(), computed.ToString()))
 				}

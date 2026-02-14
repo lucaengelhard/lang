@@ -15,6 +15,7 @@ const (
 	STRING          = "string"
 	UNION           = "Union"
 	REFERENCE       = "Ref"
+	MUTABLE         = "Mut"
 	FUNCTION        = "Function"
 	FUNCTION_ARG    = "FnArg"
 	FUNCTION_RETURN = "FnRet"
@@ -34,8 +35,24 @@ func CreateBaseType(name string) Type {
 	}
 }
 
+func (t Type) Wrap(name string) Type {
+	return Type{Name: name, Arguments: []Type{t}}
+}
+
+func (t Type) Mutable() Type {
+	return t.Wrap(MUTABLE)
+}
+
+func (t Type) Ref() Type {
+	return t.Wrap(REFERENCE)
+}
+
+func (t Type) Is(name string) bool {
+	return t.Name == name
+}
+
 func (t Type) IsUnset() bool {
-	return t.Name == UNSET_TYPE
+	return t.Is(UNSET_TYPE)
 }
 
 // TODO: Maybe optional depth argument? So the level of recursion can be set?

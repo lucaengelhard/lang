@@ -263,6 +263,10 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		p.expect(lexer.COLON)
 		explicitType := parse_type(p, default_bp)
 
+		if isMutable {
+			explicitType = explicitType.Mutable()
+		}
+
 		_, exists := arguments[argumentIdentifier]
 
 		if exists {

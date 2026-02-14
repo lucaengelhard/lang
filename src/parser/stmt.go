@@ -59,6 +59,10 @@ func parse_declaration_stmt(p *parser) ast.Stmt {
 	if p.currentTokenKind() == lexer.COLON {
 		p.advance()
 		explicitType = parse_type(p, default_bp)
+
+		if isMutable {
+			explicitType = explicitType.Mutable()
+		}
 	}
 
 	p.expect(lexer.ASSIGNMENT)
