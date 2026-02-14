@@ -38,6 +38,7 @@ func createHandlerLookup() {
 	add_handler(binary_expr_handler)
 	add_handler(declaration_handler)
 	add_handler(assignment_handler)
+	add_handler(array_instantiation_handler)
 
 }
 
@@ -166,4 +167,28 @@ func assignment_handler(node ast.AssignmentExpr, env *env) ast.Type {
 	}
 
 	return ast.CreateUnsetType()
+}
+
+func array_instantiation_handler(node ast.ArrayInstantiationExpr, env *env) ast.Type {
+	elements := make([]ast.Type, 0)
+
+	for _, el := range node.Elements {
+		computed := check(el, env)
+		var exists = false
+
+		for _, already_existing := range elements {
+			if reflect.DeepEqual(already_existing, computed) {
+				exists = true
+			}
+		}
+
+		if !exists {
+			elements = append(elements, computed)
+		}
+	}
+
+	return ast.Type{
+		Name:      ast.ARRAY,
+		Arguments: elements,
+	}
 }

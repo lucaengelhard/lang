@@ -13,6 +13,7 @@ const (
 	FLOAT      = "float"
 	BOOL       = "bool"
 	FUNCTION   = "func"
+	ARRAY      = "Array"
 )
 
 func CreateUnsetType() Type {
@@ -41,7 +42,7 @@ func (t Type) ToString() string {
 			arg_string.WriteString(arg.ToString())
 
 			if i < len(t.Arguments)-1 {
-				arg_string.WriteString(",")
+				arg_string.WriteString(", ")
 			}
 		}
 
