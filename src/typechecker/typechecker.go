@@ -26,8 +26,6 @@ func Init(node ast.Stmt) []errorhandling.Error {
 	root := createEnv(nil)
 	check(node, root)
 
-	litter.D(root)
-
 	return errors
 }
 
@@ -129,8 +127,10 @@ func binary_expr_handler(node ast.BinaryExpr, env *env) ast.Type {
 func declaration_handler(node ast.DeclarationStmt, env *env) ast.Type {
 	computed := check(node.AssignedValue, env)
 
-	if !node.Type.IsUnset() && !reflect.DeepEqual(node.Type, computed) {
-		set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s", node.Type.ToString(), computed.ToString()))
+	// TODO: make more sophisticated equality check, so that order of array doesn't matter for example
+	// Also partial matching doesn't work
+	if !node.Type.IsUnset() && !reflect.DeepEqual(env.get_type(node.Type.Name), computed) {
+		set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s (%s)", computed.ToString(), node.Type.ToString(), env.get_type(node.Type.Name).ToString()))
 		return ast.CreateUnsetType()
 	}
 
@@ -209,7 +209,7 @@ func interface_handler(node ast.InterfaceStmt, env *env) ast.Type {
 		properties := make([]ast.Type, 0)
 
 		for _, prop := range node.StructType {
-			properties = append(properties, prop.Type)
+			properties = append(properties, ast.Type{Name: prop.Name, Arguments: []ast.Type{prop.Type}})
 		}
 
 		env.set_type(node.Identifier, ast.Type{

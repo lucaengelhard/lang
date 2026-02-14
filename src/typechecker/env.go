@@ -86,6 +86,19 @@ func (env *env) set_type(identifer string, t ast.Type) {
 	root.Types[identifer] = t
 }
 
+func (env *env) get_type(identifer string) ast.Type {
+	root := env.get_root()
+
+	t, exists := root.Types[identifer]
+
+	if !exists {
+		set_err(ast.Position{}, fmt.Sprintf("Type %s doesn't exists", identifer))
+		return ast.CreateUnsetType()
+	}
+
+	return t
+}
+
 func createEnv(parent *env) *env {
 	var types map[string]ast.Type
 
