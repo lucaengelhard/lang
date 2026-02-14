@@ -73,16 +73,6 @@ func createEnv(parent *env) *env {
 	}
 }
 
-var errors = make([]errorhandling.Error, 0)
-
-func set_err(pos ast.Position, message string) {
-	errors = append(errors, errorhandling.Error{
-		Message:  message,
-		Position: pos.Start,
-	})
-
-}
-
 func check(node any, env *env) ast.Type {
 	switch node := node.(type) {
 	case ast.BlockStmt:
@@ -90,6 +80,7 @@ func check(node any, env *env) ast.Type {
 		for _, stmt := range node.Body {
 			check(stmt, scope)
 		}
+		return ast.CreateUnsetType()
 	case ast.DeclarationStmt:
 		computed := check(node.AssignedValue, env)
 
@@ -98,6 +89,7 @@ func check(node any, env *env) ast.Type {
 		}
 
 		env.set(node.Identifier, computed, true, node.IsMutable)
+		return ast.CreateUnsetType()
 
 	case ast.SymbolExpr:
 		val, err := env.get(node.Value)
@@ -126,12 +118,20 @@ func check(node any, env *env) ast.Type {
 		}
 
 		return value
-
-	default:
-		litter.D(node)
 	}
 
+	litter.D(node)
+	set_err(ast.Position{}, "Node unknown to typechecker :(")
 	return ast.CreateUnsetType()
+}
+
+var errors = make([]errorhandling.Error, 0)
+
+func set_err(pos ast.Position, message string) {
+	errors = append(errors, errorhandling.Error{
+		Message:  message,
+		Position: pos.Start,
+	})
 }
 
 func Init(node ast.Stmt) []errorhandling.Error {
