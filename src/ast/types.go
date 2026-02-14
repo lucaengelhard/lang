@@ -13,6 +13,7 @@ const (
 	FLOAT           = "float"
 	BOOL            = "bool"
 	STRING          = "string"
+	UNION           = "Union"
 	FUNCTION        = "Function"
 	FUNCTION_ARG    = "FnArg"
 	FUNCTION_RETURN = "FnRet"

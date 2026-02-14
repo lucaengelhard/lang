@@ -6,8 +6,8 @@ import (
 	"github.com/lucaengelhard/lang/src/ast"
 )
 
-func match(a, b ast.Type) bool {
-	return exec_match_op(a, b) || exec_match_op(b, a)
+func match(expected, input ast.Type) bool {
+	return exec_match_op(expected, input) // || exec_match_op(b, a)
 }
 
 type match_op func(a, b ast.Type) bool
@@ -16,6 +16,14 @@ var match_lookup = map[string]map[string]match_op{}
 
 func exec_match_op(a, b ast.Type) bool {
 	op, exists := match_lookup[a.Name][b.Name]
+
+	if a.Name == ast.UNION && b.Name != ast.UNION {
+		for _, union_type := range a.Arguments {
+			if match(union_type, b) {
+				return true
+			}
+		}
+	}
 
 	if !exists {
 		return reflect.DeepEqual(a, b)

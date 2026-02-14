@@ -46,6 +46,7 @@ func createHandlerLookup() {
 	add_handler(struct_instantiation_handler)
 	add_handler(fn_declare_handler)
 	add_handler(return_handler)
+	add_handler(if_handler)
 
 }
 
@@ -87,8 +88,9 @@ func block_handler(node ast.BlockStmt, env *env) ast.Type {
 	var return_type = ast.CreateUnsetType()
 	for _, stmt := range node.Body {
 		_, isReturn := stmt.(ast.ReturnStmt)
+		_, isIf := stmt.(ast.IfStmt)
 		computed := check(stmt, scope)
-		if isReturn {
+		if isReturn || isIf {
 			return_type = computed
 		}
 	}
@@ -293,8 +295,6 @@ func fn_declare_handler(node ast.FnDeclareExpr, env *env) ast.Type {
 	computed_return_type := check(node.Body, scope)
 
 	if !return_type.IsUnset() && !match(return_type, computed_return_type) {
-		litter.D(node.Type.ToString())
-
 		set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s (%s)", computed_return_type.ToString(), return_type.ToString(), env.get_type(return_type.Name).ToString()))
 	}
 
@@ -309,4 +309,11 @@ func fn_declare_handler(node ast.FnDeclareExpr, env *env) ast.Type {
 
 func return_handler(node ast.ReturnStmt, env *env) ast.Type {
 	return check(node.Value, env)
+}
+
+func if_handler(node ast.IfStmt, env *env) ast.Type {
+	true_return := check(node.True, env)
+	false_return := check(node.False, env)
+
+	return ast.Type{Name: ast.UNION, Arguments: []ast.Type{true_return, false_return}}
 }
