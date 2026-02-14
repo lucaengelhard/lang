@@ -47,6 +47,7 @@ func createHandlerLookup() {
 	add_handler(fn_declare_handler)
 	add_handler(return_handler)
 	add_handler(if_handler)
+	add_handler(fn_call_handler)
 
 }
 
@@ -172,7 +173,8 @@ func assignment_handler(node ast.AssignmentExpr, env *env) ast.Type {
 		computed, err := exec_type_op(op_token, current.Value, right)
 
 		if err != nil {
-			set_err(node.Position, err.Error())
+			set_err(node.Position, fmt.Sprintf("Type %s is not assignable to variable of type %s (%s)", right.ToString(), current.Value.ToString(), err.Error()))
+			return ast.CreateUnsetType()
 		}
 
 		err = env.set(assignee.Value, computed, false, false)
@@ -296,6 +298,8 @@ func fn_declare_handler(node ast.FnDeclareExpr, env *env) ast.Type {
 
 	if !return_type.IsUnset() && !match(return_type, computed_return_type) {
 		set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s (%s)", computed_return_type.ToString(), return_type.ToString(), env.get_type(return_type.Name).ToString()))
+	} else {
+		return_type = computed_return_type
 	}
 
 	return ast.Type{
@@ -305,6 +309,50 @@ func fn_declare_handler(node ast.FnDeclareExpr, env *env) ast.Type {
 			wrap_property_type(ast.FUNCTION_RETURN, return_type),
 		},
 	}
+}
+
+func fn_call_handler(node ast.FnCallExpr, env *env) ast.Type {
+	caller, _ := node.Caller.(ast.SymbolExpr)
+	declaration, err := env.get(caller.Value)
+	var return_type = ast.CreateUnsetType()
+
+	if err != nil {
+		set_err(node.Position, fmt.Sprintf("%s not found", caller.Value))
+		return ast.CreateUnsetType()
+	}
+
+	if declaration.Value.Name != ast.FUNCTION {
+		set_err(node.Position, fmt.Sprintf("%s not a function", caller.Value))
+		return ast.CreateUnsetType()
+	}
+
+	for _, type_arg := range declaration.Value.Arguments {
+		if type_arg.Name == ast.FUNCTION_ARG {
+			if len(type_arg.Arguments) < len(node.Arguments) {
+				set_err(node.Position, fmt.Sprintf("Too many arguments. Expected %d, got %d", len(type_arg.Arguments), len(node.Arguments)))
+
+			}
+
+			if len(type_arg.Arguments) > len(node.Arguments) {
+				set_err(node.Position, fmt.Sprintf("Missing arguments. Expected %d, got %d", len(type_arg.Arguments), len(node.Arguments)))
+			}
+
+			// TODO: Handle named args
+			for index, arg := range node.Arguments {
+				expected := type_arg.Arguments[index].Arguments[0]
+				computed := check(arg.Value, env)
+				if !match(expected, computed) {
+					set_err(node.Position, fmt.Sprintf("Mismatched argument (%d). Expected %s, got %s", index, expected.ToString(), computed.ToString()))
+				}
+			}
+		}
+
+		if type_arg.Name == ast.FUNCTION_RETURN {
+			return_type = type_arg.Arguments[0]
+		}
+	}
+
+	return return_type
 }
 
 func return_handler(node ast.ReturnStmt, env *env) ast.Type {

@@ -10,7 +10,7 @@ import (
 var type_binop_lookup = map[lexer.TokenKind]map[string]map[string]ast.Type{}
 
 func exec_type_op(token lexer.TokenKind, left, right ast.Type) (ast.Type, error) {
-	err_str := fmt.Sprintf("No type operation for %s and %s\n", left.Name, right.Name)
+	err_str := fmt.Sprintf("No type operation for %s and %s", left.Name, right.Name)
 
 	tk, exists_tk := type_binop_lookup[token]
 
