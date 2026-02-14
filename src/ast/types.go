@@ -12,6 +12,7 @@ const (
 	INTEGER    = "int"
 	FLOAT      = "float"
 	BOOL       = "bool"
+	STRING     = "string"
 	FUNCTION   = "func"
 	ARRAY      = "Array"
 )

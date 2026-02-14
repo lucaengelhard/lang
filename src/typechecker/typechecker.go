@@ -35,6 +35,7 @@ func createHandlerLookup() {
 	add_handler(int_handler)
 	add_handler(float_handler)
 	add_handler(bool_handler)
+	add_handler(string_handler)
 	add_handler(binary_expr_handler)
 	add_handler(declaration_handler)
 	add_handler(assignment_handler)
@@ -105,6 +106,10 @@ func float_handler(node ast.FloatExpr, env *env) ast.Type {
 
 func bool_handler(node ast.BoolExpr, env *env) ast.Type {
 	return ast.CreateBaseType(ast.BOOL)
+}
+
+func string_handler(node ast.StringExpr, env *env) ast.Type {
+	return ast.CreateBaseType(ast.STRING)
 }
 
 func binary_expr_handler(node ast.BinaryExpr, env *env) ast.Type {
