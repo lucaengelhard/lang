@@ -92,6 +92,8 @@ func (env *env) set_type(identifer string, t ast.Type) {
 func (env *env) get_type(identifer string) ast.Type {
 	root := env.get_root()
 
+	//TODO: What should happen with preset types?
+
 	t, exists := root.Types[identifer]
 
 	if !exists {

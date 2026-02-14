@@ -8,15 +8,17 @@ type Type struct {
 }
 
 const (
-	UNSET_TYPE = "__unset__"
-	INTEGER    = "int"
-	FLOAT      = "float"
-	BOOL       = "bool"
-	STRING     = "string"
-	FUNCTION   = "func"
-	ARRAY      = "Array"
-	STRUCT     = "Struct"
-	DICT       = "Dict"
+	UNSET_TYPE      = "__unset__"
+	INTEGER         = "int"
+	FLOAT           = "float"
+	BOOL            = "bool"
+	STRING          = "string"
+	FUNCTION        = "Function"
+	FUNCTION_ARG    = "FnArg"
+	FUNCTION_RETURN = "FnRet"
+	ARRAY           = "Array"
+	STRUCT          = "Struct"
+	DICT            = "Dict"
 )
 
 func CreateUnsetType() Type {

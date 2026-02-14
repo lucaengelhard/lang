@@ -221,7 +221,7 @@ func parse_fn_stmt(p *parser) ast.Stmt {
 		IsMutable:     false,
 		AssignedValue: parse_fn_declare_expr(p),
 		Position:      ast.CreatePosition(start_pos.Start, end_pos.End),
-		Type:          ast.Type{Name: ast.FUNCTION},
+		Type:          ast.CreateUnsetType(),
 	}
 }
 

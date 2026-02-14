@@ -44,6 +44,8 @@ func createHandlerLookup() {
 	add_handler(interface_handler)
 	add_handler(struct_stmt_handler)
 	add_handler(struct_instantiation_handler)
+	add_handler(fn_declare_handler)
+	add_handler(return_handler)
 
 }
 
@@ -82,11 +84,16 @@ func expr_stmt_handler(node ast.ExpressionStmt, env *env) ast.Type {
 
 func block_handler(node ast.BlockStmt, env *env) ast.Type {
 	scope := createEnv(env)
+	var return_type = ast.CreateUnsetType()
 	for _, stmt := range node.Body {
-		check(stmt, scope)
+		_, isReturn := stmt.(ast.ReturnStmt)
+		computed := check(stmt, scope)
+		if isReturn {
+			return_type = computed
+		}
 	}
 
-	return ast.CreateUnsetType()
+	return return_type
 }
 
 func symbol_handler(node ast.SymbolExpr, env *env) ast.Type {
@@ -271,4 +278,35 @@ func struct_instantiation_handler(node ast.StructInstantiationExpr, env *env) as
 	}
 
 	return struct_type
+}
+
+func fn_declare_handler(node ast.FnDeclareExpr, env *env) ast.Type {
+	args := make([]ast.Type, 0)
+	scope := createEnv(env)
+	var return_type = node.ReturnType
+
+	for _, arg := range node.Arguments {
+		args = append(args, wrap_property_type(arg.Identifier, arg.Type))
+		scope.set(arg.Identifier, arg.Type, true, arg.IsMutable)
+	}
+
+	computed_return_type := check(node.Body, scope)
+
+	if !return_type.IsUnset() && !match(return_type, computed_return_type) {
+		litter.D(node.Type.ToString())
+
+		set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s (%s)", computed_return_type.ToString(), return_type.ToString(), env.get_type(return_type.Name).ToString()))
+	}
+
+	return ast.Type{
+		Name: ast.FUNCTION,
+		Arguments: []ast.Type{
+			{Name: ast.FUNCTION_ARG, Arguments: args},
+			wrap_property_type(ast.FUNCTION_RETURN, return_type),
+		},
+	}
+}
+
+func return_handler(node ast.ReturnStmt, env *env) ast.Type {
+	return check(node.Value, env)
 }
