@@ -175,6 +175,13 @@ var token_string_lookup = map[TokenKind]string{
 	SPREAD:         "spread",
 }
 
+var Assignment_operation_lu = map[TokenKind]TokenKind{
+	PLUS_EQUALS:  PLUS,
+	MINUS_EQUALS: MINUS,
+	PLUS_PLUS:    PLUS,
+	MINUS_MINUS:  MINUS,
+}
+
 func InitTokenLookup() {
 	for value, kind := range reserved_lookup {
 		_, exists := token_string_lookup[kind]

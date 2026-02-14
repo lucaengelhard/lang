@@ -59,4 +59,6 @@ func create_commuative_type_binop(token lexer.TokenKind, a, b, return_type ast.T
 func createOpLookup() {
 	create_type_binop(lexer.PLUS, ast.CreateBaseType(ast.INTEGER), ast.CreateBaseType(ast.INTEGER), ast.CreateBaseType(ast.INTEGER))
 	create_commuative_type_binop(lexer.PLUS, ast.CreateBaseType(ast.INTEGER), ast.CreateBaseType(ast.FLOAT), ast.CreateBaseType(ast.FLOAT))
+	create_type_binop(lexer.MINUS, ast.CreateBaseType(ast.INTEGER), ast.CreateBaseType(ast.INTEGER), ast.CreateBaseType(ast.INTEGER))
+	create_commuative_type_binop(lexer.MINUS, ast.CreateBaseType(ast.INTEGER), ast.CreateBaseType(ast.FLOAT), ast.CreateBaseType(ast.FLOAT))
 }

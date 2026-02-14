@@ -5,7 +5,6 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/errorhandling"
-	"github.com/lucaengelhard/lang/src/interpreter"
 	"github.com/lucaengelhard/lang/src/lexer"
 	"github.com/lucaengelhard/lang/src/parser"
 	"github.com/lucaengelhard/lang/src/typechecker"
@@ -40,9 +39,9 @@ func main() {
 	}
 
 	// Interpretation / Compilation
-	if len(errors) == 0 {
+	/* if len(errors) == 0 {
 		interpreter.Init(abstract_syntax_tree)
-	}
+	} */
 
 	// Error handling
 	errorhandling.PrintErrors(source, errors)

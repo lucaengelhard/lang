@@ -6,6 +6,7 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/errorhandling"
+	"github.com/lucaengelhard/lang/src/lexer"
 	"github.com/sanity-io/litter"
 )
 
@@ -35,7 +36,7 @@ func (env *env) get(identifier string) (*env_decl, error) {
 	return env.Parent.get(identifier)
 }
 
-func (env *env) set(identifer string, value ast.Type, isNew bool, isMutable bool) {
+func (env *env) set(identifer string, value ast.Type, isNew bool, isMutable bool) error {
 	if isNew {
 		if _, exists := env.Declarations[identifer]; exists {
 			panic(fmt.Sprintf("%s already exists in scope\n", identifer))
@@ -47,19 +48,20 @@ func (env *env) set(identifer string, value ast.Type, isNew bool, isMutable bool
 			IsReference: false,
 			Value:       value,
 		}
-		return
+		return nil
 	}
 
 	decl, err := env.get(identifer)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if !decl.IsMutable {
-		panic(fmt.Sprintf("%s is not mutable\n", identifer))
+		return fmt.Errorf("%s is not mutable\n", identifer)
 	}
 	decl.Value = value
+	return nil
 }
 
 func (env *env) set_ref(identifer string, ref *env_decl) {
@@ -75,6 +77,8 @@ func createEnv(parent *env) *env {
 
 func check(node any, env *env) ast.Type {
 	switch node := node.(type) {
+	case ast.ExpressionStmt:
+		return check(node.Expression, env)
 	case ast.BlockStmt:
 		scope := createEnv(env)
 		for _, stmt := range node.Body {
@@ -86,9 +90,48 @@ func check(node any, env *env) ast.Type {
 
 		if !node.Type.IsUnset() && !reflect.DeepEqual(node.Type, computed) {
 			set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s", node.Type.Name, computed.Name))
+			return ast.CreateUnsetType()
 		}
 
 		env.set(node.Identifier, computed, true, node.IsMutable)
+
+		return ast.CreateUnsetType()
+
+	case ast.AssignmentExpr:
+		assignee := node.Assignee.(ast.SymbolExpr)
+		right := check(node.Right, env)
+
+		current, err := env.get(assignee.Value)
+
+		if err != nil {
+			set_err(node.Position, err.Error())
+			return ast.CreateUnsetType()
+		}
+
+		op_token, op_token_exists := lexer.Assignment_operation_lu[node.Operator.Kind]
+
+		if op_token_exists {
+			computed, err := exec_type_op(op_token, current.Value, right)
+
+			if err != nil {
+				set_err(node.Position, err.Error())
+			}
+
+			err = env.set(assignee.Value, computed, false, false)
+
+			if err != nil {
+				set_err(node.Position, err.Error())
+			}
+		} else if node.Operator.Kind == lexer.ASSIGNMENT {
+			err = env.set(assignee.Value, right, false, false)
+
+			if err != nil {
+				set_err(node.Position, err.Error())
+			}
+		} else {
+			set_err(node.Position, fmt.Sprintf("Unknown assignment operator: %s", node.Operator.Kind.ToString()))
+		}
+
 		return ast.CreateUnsetType()
 
 	case ast.SymbolExpr:
@@ -115,6 +158,7 @@ func check(node any, env *env) ast.Type {
 
 		if err != nil {
 			set_err(node.Position, err.Error())
+			return ast.CreateUnsetType()
 		}
 
 		return value
@@ -129,7 +173,7 @@ var errors = make([]errorhandling.Error, 0)
 
 func set_err(pos ast.Position, message string) {
 	errors = append(errors, errorhandling.Error{
-		Message:  message,
+		Message:  "Type error -> " + message,
 		Position: pos.Start,
 	})
 }

@@ -256,7 +256,7 @@ func interpret_assignment(input any, env *env) {
 		panic(error)
 	}
 
-	op_token, op_token_exists := assignment_operation_lu[assignment.Operator.Kind]
+	op_token, op_token_exists := lexer.Assignment_operation_lu[assignment.Operator.Kind]
 
 	if op_token_exists {
 		env.set(assignee.Value, execute_binop(op_token, current.Value, right_result), false, false)

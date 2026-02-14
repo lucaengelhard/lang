@@ -12,7 +12,6 @@ type binop func(l, r any) any
 type binop_lookup map[lexer.TokenKind]map[reflect.Type]map[reflect.Type]binop
 
 var binop_lu = binop_lookup{}
-var assignment_operation_lu = map[lexer.TokenKind]lexer.TokenKind{}
 
 func create_binop[L any, R any, Ret any](token lexer.TokenKind, op func(l L, r R) Ret) {
 	_, tk_map_exists := binop_lu[token]
@@ -106,10 +105,6 @@ func createOpLookup() {
 	create_binop(lexer.OR, or)
 	create_binop(lexer.AND, and)
 
-	assignment_operation_lu[lexer.PLUS_EQUALS] = lexer.PLUS
-	assignment_operation_lu[lexer.MINUS_EQUALS] = lexer.MINUS
-	assignment_operation_lu[lexer.PLUS_PLUS] = lexer.PLUS
-	assignment_operation_lu[lexer.MINUS_MINUS] = lexer.MINUS
 }
 
 func int_to_float(input int64) float64 {
