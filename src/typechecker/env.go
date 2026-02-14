@@ -57,7 +57,10 @@ func (env *env) set(identifer string, value ast.Type, isNew bool, isMutable bool
 	if !decl.IsMutable {
 		return fmt.Errorf("%s is not mutable\n", identifer)
 	}
-	decl.Value = value
+
+	if !match(decl.Value, value) {
+		return fmt.Errorf("Type %s is not assignable to variable of type %s\n", value.ToString(), decl.Value.ToString())
+	}
 	return nil
 }
 

@@ -22,6 +22,7 @@ func set_err(pos ast.Position, message string) {
 func Init(node ast.Stmt) []errorhandling.Error {
 	createOpLookup()
 	createHandlerLookup()
+	createMatchLookup()
 
 	root := createEnv(nil)
 	check(node, root)
