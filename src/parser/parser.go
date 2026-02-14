@@ -38,6 +38,13 @@ func (p *parser) printCurrentToken() {
 	fmt.Println(p.currentTokenKind().ToString())
 }
 
+func (p *parser) curentTokenPosition() ast.Position {
+	return ast.Position{
+		Start: p.index,
+		End:   p.index + len(p.currentToken().Literal),
+	}
+}
+
 func (p *parser) peekNext() lexer.Token {
 	return p.tokens[p.index+1]
 }

@@ -150,7 +150,7 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 	position_arg_map := make([]ast.FnArg, len(declaration.Arguments))
 
 	for _, arg := range declaration.Arguments {
-		position_arg_map[arg.Position] = arg
+		position_arg_map[arg.ArgIndex] = arg
 	}
 
 	return func(args ...FnCallArg) any {
@@ -177,11 +177,11 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 
 			if definition_arg.IsReference {
 				if passed_arg.Reference == nil {
-					panic(fmt.Sprintf("Expected reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.Position))
+					panic(fmt.Sprintf("Expected reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.ArgIndex))
 				}
 
 				if definition_arg.IsMutable && !passed_arg.Reference.IsMutable {
-					panic(fmt.Sprintf("Expected mutable reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.Position))
+					panic(fmt.Sprintf("Expected mutable reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.ArgIndex))
 				}
 
 				scope.set_ref(definition_arg.Identifier, passed_arg.Reference)
@@ -189,7 +189,7 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 
 			if !definition_arg.IsReference {
 				if passed_arg.Reference != nil {
-					panic(fmt.Sprintf("Expected argument %s (%v) to be passed by value, got reference\n", definition_arg.Identifier, definition_arg.Position))
+					panic(fmt.Sprintf("Expected argument %s (%v) to be passed by value, got reference\n", definition_arg.Identifier, definition_arg.ArgIndex))
 				}
 
 				scope.set(definition_arg.Identifier, passed_arg.Value, true, definition_arg.IsMutable)

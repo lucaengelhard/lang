@@ -2,8 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"reflect"
-	"strconv"
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
@@ -32,11 +30,9 @@ func type_nud(kind lexer.TokenKind, nud_fn type_nud_handler) {
 
 func createTokenTypeLookups() {
 	type_nud(lexer.IDENTIFIER, parse_symbol_type)
-	type_nud(lexer.NUMBER, parse_number_type)
-	type_nud(lexer.STRING, parse_string_type)
-	type_nud(lexer.OPEN_PAREN, parse_fn_type)
-	type_led(lexer.LESS, call, parse_generic_type)
-	type_led(lexer.IS, logical, parse_is_type)
+	/* 	type_nud(lexer.NUMBER, parse_number_type)
+	   	type_nud(lexer.STRING, parse_string_type) */
+	//type_nud(lexer.OPEN_PAREN, parse_fn_type)
 }
 
 func parse_type(p *parser, bp binding_power) ast.Type {
@@ -45,7 +41,7 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 
 	if !exists {
 		p.err(fmt.Sprintf("Type Nud handler expected for token %s\n", tokenKind.ToString()))
-		return nil
+		return ast.CreateUnsetType()
 	}
 
 	left := nud_fn(p)
@@ -56,7 +52,7 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 
 		if !exists {
 			p.err(fmt.Sprintf("Type Led handler expected for token %s\n", tokenKind.ToString()))
-			return nil
+			return ast.CreateUnsetType()
 		}
 
 		left = led_fn(p, left, type_bp_lu[p.currentTokenKind()])
@@ -66,56 +62,38 @@ func parse_type(p *parser, bp binding_power) ast.Type {
 }
 
 func parse_symbol_type(p *parser) ast.Type {
-	return ast.SymbolType{Value: p.expect(lexer.IDENTIFIER).Literal}
+	ident := p.expect(lexer.IDENTIFIER)
+	args := make([]ast.Type, 0)
+
+	if p.currentTokenKind() == lexer.LESS {
+		p.advance()
+		for p.hasTokens() && p.currentTokenKind() != lexer.GREATER {
+			args = append(args, parse_type(p, logical))
+
+			if p.currentTokenKind() != lexer.GREATER {
+				p.expect(lexer.COMMA)
+			}
+		}
+		p.expect(lexer.GREATER)
+	}
+
+	return ast.Type{Name: ident.Literal, Arguments: args}
 }
 
-func parse_string_type(p *parser) ast.Type {
-	return ast.StringLiteralType{Value: p.expect(lexer.STRING).Literal}
+/* func parse_string_type(p *parser) typechecker.Type {
+	return typechecker.Type{Name: "string"}
 }
 
-func parse_number_type(p *parser) ast.Type {
+func parse_number_type(p *parser) typechecker.Type {
 	val := p.expect(lexer.NUMBER).Literal
-	if i, err := strconv.ParseInt(val, 10, 64); err == nil {
-		return ast.IntLiteralType{
-			Value: i,
-		}
+	if _, err := strconv.ParseInt(val, 10, 64); err == nil {
+		return typechecker.Type{Name: "int"}
 	}
 
-	p.err(fmt.Sprintf("Only integers allowed in Number Types %s", val))
-	return ast.UnkownType{}
-}
+	return typechecker.Type{Name: "float"}
+} */
 
-func parse_generic_type(p *parser, left ast.Type, bp binding_power) ast.Type {
-	symbol, ok := left.(ast.SymbolType)
-
-	if !ok {
-		p.err(fmt.Sprintf("Type error: Expected %s got %s", reflect.TypeFor[ast.SymbolExpr](), reflect.TypeOf(symbol)))
-		return nil
-	}
-
-	identifier := symbol.Value
-
-	var arguments = []ast.Type{}
-	p.expect(lexer.LESS)
-
-	for p.hasTokens() && p.currentTokenKind() != lexer.GREATER {
-		typeArg := parse_type(p, logical)
-		arguments = append(arguments, typeArg)
-
-		if p.currentTokenKind() != lexer.GREATER {
-			p.expect(lexer.COMMA)
-		}
-	}
-
-	p.expect(lexer.GREATER)
-
-	return ast.GenericType{
-		Identifier: identifier,
-		Arguments:  arguments,
-	}
-}
-
-func parse_fn_type(p *parser) ast.Type {
+/* func parse_fn_type(p *parser) typechecker.Type {
 	var arguments = map[string]ast.FnArg{}
 
 	p.expect(lexer.OPEN_PAREN)
@@ -152,7 +130,7 @@ func parse_fn_type(p *parser) ast.Type {
 
 	p.expect(lexer.CLOSE_PAREN)
 
-	var returnType ast.Type
+	var returnType typechecker.Type
 
 	if p.currentTokenKind() == lexer.R_ARROW {
 		p.advance()
@@ -163,12 +141,4 @@ func parse_fn_type(p *parser) ast.Type {
 		Arguments:  arguments,
 		ReturnType: returnType,
 	}
-}
-
-func parse_is_type(p *parser, left ast.Type, bp binding_power) ast.Type {
-	p.advance()
-	return ast.IsType{
-		Left:  left,
-		Right: parse_type(p, bp),
-	}
-}
+} */

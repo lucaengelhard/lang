@@ -8,6 +8,8 @@ import (
 )
 
 func parse_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	stmt_fn, exists := stmt_lu[p.currentTokenKind()]
 
 	if exists {
@@ -15,31 +17,39 @@ func parse_stmt(p *parser) ast.Stmt {
 	}
 
 	expression := parse_expr(p, default_bp)
-
+	end_pos := p.curentTokenPosition()
 	p.expect(lexer.SEMI_COLON)
 
 	return ast.ExpressionStmt{
 		Expression: expression,
+		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_block_stmt(p *parser) ast.BlockStmt {
+	start_pos := p.curentTokenPosition()
+
 	body := make([]ast.Stmt, 0)
 
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_CURLY {
 		body = append(body, parse_stmt(p))
 	}
 
+	end_pos := p.curentTokenPosition()
+
 	return ast.BlockStmt{
-		Body: body,
+		Body:     body,
+		Position: ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_declaration_stmt(p *parser) ast.Stmt {
-	var explicitType ast.Type
+	pos := p.curentTokenPosition()
+
+	var explicitType = ast.CreateUnsetType()
 
 	isMutable := p.nextIsKind(lexer.MUT)
-	identifier := p.expect(lexer.IDENTIFIER).Literal
+	identifier := p.expect(lexer.IDENTIFIER)
 
 	if p.currentTokenKind() == lexer.COLON {
 		p.advance()
@@ -52,9 +62,10 @@ func parse_declaration_stmt(p *parser) ast.Stmt {
 
 	return ast.DeclarationStmt{
 		IsMutable:     isMutable,
-		Identifier:    identifier,
+		Identifier:    identifier.Literal,
 		AssignedValue: assignedValue,
 		Type:          explicitType,
+		Position:      pos,
 	}
 }
 
@@ -94,9 +105,10 @@ func parse_struct_properties(p *parser) map[string]ast.StructProperty {
 }
 
 func parse_struct_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
 	p.expect(lexer.STRUCT)
 	identifier := p.expect(lexer.IDENTIFIER).Literal
-	var typeArg ast.Type
+	var typeArg = ast.CreateUnsetType()
 
 	if p.currentTokenKind() == lexer.LESS {
 		p.advance()
@@ -108,19 +120,23 @@ func parse_struct_stmt(p *parser) ast.Stmt {
 
 	p.expect(lexer.OPEN_CURLY)
 	properties := parse_struct_properties(p)
+	end_pos := p.curentTokenPosition()
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.StructStmt{
 		Identifier: identifier,
 		Type:       typeArg,
 		Properties: properties,
+		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_interface_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	p.expect(lexer.INTERFACE)
 	identifier := p.expect(lexer.IDENTIFIER).Literal
-	var typeArg ast.Type
+	var typeArg = ast.CreateUnsetType()
 
 	if p.currentTokenKind() == lexer.LESS {
 		p.advance()
@@ -141,16 +157,20 @@ func parse_interface_stmt(p *parser) ast.Stmt {
 
 	p.expect(lexer.OPEN_CURLY)
 	structType := parse_struct_properties(p)
+	end_pos := p.curentTokenPosition()
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.InterfaceStmt{
 		Identifier: identifier,
 		TypeArg:    typeArg,
 		StructType: structType,
+		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_enum_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	p.expect(lexer.ENUM)
 	identifier := p.expect(lexer.IDENTIFIER).Literal
 	var elements = map[string]int{}
@@ -166,26 +186,37 @@ func parse_enum_stmt(p *parser) ast.Stmt {
 		}
 	}
 
+	end_pos := p.curentTokenPosition()
+
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.EnumStmt{
 		Identifier: identifier,
 		Elements:   elements,
+		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_fn_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	p.expect(lexer.FN)
 	identifier := p.expect(lexer.IDENTIFIER)
+
+	end_pos := p.curentTokenPosition()
 
 	return ast.DeclarationStmt{
 		Identifier:    identifier.Literal,
 		IsMutable:     false,
 		AssignedValue: parse_fn_declare_expr(p),
+		Position:      ast.CreatePosition(start_pos.Start, end_pos.End),
+		Type:          ast.Type{Name: ast.FUNCTION},
 	}
 }
 
 func parse_if_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	p.expect(lexer.IF)
 	p.expect(lexer.OPEN_PAREN)
 	cond := parse_expr(p, assignment)
@@ -203,14 +234,19 @@ func parse_if_stmt(p *parser) ast.Stmt {
 		p.expect(lexer.CLOSE_CURLY)
 	}
 
+	end_pos := p.curentTokenPosition()
+
 	return ast.IfStmt{
 		Condition: cond,
 		True:      true_stmt,
 		False:     false_stmt,
+		Position:  ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_while_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	p.expect(lexer.WHILE)
 	p.expect(lexer.OPEN_PAREN)
 	cond := parse_expr(p, assignment)
@@ -218,15 +254,19 @@ func parse_while_stmt(p *parser) ast.Stmt {
 
 	p.expect(lexer.OPEN_CURLY)
 	body := parse_block_stmt(p)
+	end_pos := p.curentTokenPosition()
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.WhileStmt{
 		Condition: cond,
 		Body:      body,
+		Position:  ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_for_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
+
 	p.expect(lexer.FOR)
 	p.expect(lexer.OPEN_PAREN)
 	assignemt := parse_stmt(p)
@@ -236,6 +276,7 @@ func parse_for_stmt(p *parser) ast.Stmt {
 
 	p.expect(lexer.OPEN_CURLY)
 	body := parse_block_stmt(p)
+	end_pos := p.curentTokenPosition()
 	p.expect(lexer.CLOSE_CURLY)
 
 	return ast.ForStmt{
@@ -243,32 +284,38 @@ func parse_for_stmt(p *parser) ast.Stmt {
 		Condition:  cond,
 		Increment:  incr,
 		Body:       body,
+		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }
 
 func parse_return_stmt(p *parser) ast.Stmt {
+	pos := p.curentTokenPosition()
 	p.expect(lexer.RETURN)
 	expr := parse_expr(p, logical)
 	p.expect(lexer.SEMI_COLON)
 
 	return ast.ReturnStmt{
-		Value: expr,
+		Value:    expr,
+		Position: pos,
 	}
 }
 
 func parse_continue_stmt(p *parser) ast.Stmt {
+	pos := p.curentTokenPosition()
 	p.expect(lexer.CONTINUE)
 	p.expect(lexer.SEMI_COLON)
-	return ast.ContinueStmt{}
+	return ast.ContinueStmt{Position: pos}
 }
 
 func parse_break_stmt(p *parser) ast.Stmt {
+	pos := p.curentTokenPosition()
 	p.expect(lexer.BREAK)
 	p.expect(lexer.SEMI_COLON)
-	return ast.BreakStmt{}
+	return ast.BreakStmt{Position: pos}
 }
 
 func parse_import_stmt(p *parser) ast.Stmt {
+	start_pos := p.curentTokenPosition()
 	p.expect(lexer.IMPORT)
 	path := p.expect(lexer.STRING).Literal
 	p.expect(lexer.R_ARROW)
@@ -290,9 +337,12 @@ func parse_import_stmt(p *parser) ast.Stmt {
 		identifier = p.expect(lexer.IDENTIFIER).Literal
 	}
 
+	end_pos := p.curentTokenPosition()
+
 	return ast.ImportStmt{
 		Path:       path,
 		Identifier: identifier,
 		Items:      items,
+		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
 	}
 }

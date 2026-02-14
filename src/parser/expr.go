@@ -37,13 +37,14 @@ func parse_expr(p *parser, bp binding_power) ast.Expr {
 }
 
 func parse_boolean_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
 	switch p.currentTokenKind() {
 	case lexer.TRUE:
 		p.advance()
-		return ast.BoolExpr{Value: true}
+		return ast.BoolExpr{Value: true, Position: pos}
 	case lexer.FALSE:
 		p.advance()
-		return ast.BoolExpr{Value: false}
+		return ast.BoolExpr{Value: false, Position: pos}
 	default:
 		p.err(fmt.Sprintf("Cannot create boolean expression from %s\n", p.currentTokenKind().ToString()))
 		return ast.UnknowPrimary{}
@@ -51,34 +52,42 @@ func parse_boolean_expr(p *parser) ast.Expr {
 }
 
 func parse_number_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
 	val := p.advance().Literal
 	if i, err := strconv.ParseInt(val, 10, 64); err == nil {
 		return ast.IntExpr{
-			Value: i,
+			Value:    i,
+			Position: pos,
 		}
 	}
 
 	number, _ := strconv.ParseFloat(val, 64)
 	return ast.FloatExpr{
-		Value: number,
+		Value:    number,
+		Position: pos,
 	}
 }
 
 func parse_string_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
 	literal := p.advance().Literal
-	return ast.StringExpr{Value: literal}
+	return ast.StringExpr{Value: literal, Position: pos}
 }
 
 func parse_symbol_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
+
 	isReference := p.currentTokenKind() == lexer.STAR
 	if isReference {
 		p.advance()
 	}
 
-	return ast.SymbolExpr{Value: p.advance().Literal, IsReference: isReference}
+	return ast.SymbolExpr{Value: p.advance().Literal, IsReference: isReference, Position: pos}
 }
 
 func parse_binary_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
+
 	operator := p.advance()
 	right := parse_expr(p, bp)
 
@@ -86,10 +95,12 @@ func parse_binary_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 		Left:     left,
 		Operator: operator,
 		Right:    right,
+		Position: pos,
 	}
 }
 
 func parse_assignment_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
 	operator := p.advance()
 	rightExpr := parse_expr(p, bp)
 
@@ -97,26 +108,31 @@ func parse_assignment_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr 
 		Operator: operator,
 		Right:    rightExpr,
 		Assignee: left,
+		Position: pos,
 	}
 }
 
 func parser_prefix_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
 	operator := p.advance()
 	rightExpr := parse_expr(p, default_bp)
 
 	return ast.PrefixExpr{
 		Operator: operator,
 		Right:    rightExpr,
+		Position: pos,
 	}
 }
 
 func parse_postfix_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
 	operator := p.advance()
 
 	return ast.AssignmentExpr{
 		Assignee: left,
 		Operator: operator,
 		Right:    ast.IntExpr{Value: 1},
+		Position: pos,
 	}
 }
 
@@ -129,6 +145,8 @@ func parse_grouping_expr(p *parser) ast.Expr {
 }
 
 func parse_struct_instantiation_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
+
 	symbol, ok := left.(ast.SymbolExpr)
 
 	if !ok {
@@ -158,10 +176,12 @@ func parse_struct_instantiation_expr(p *parser, left ast.Expr, bp binding_power)
 	return ast.StructInstantiationExpr{
 		StructIdentifier: structIdentifier,
 		Properties:       properties,
+		Position:         pos,
 	}
 }
 
 func parse_array_instantiation_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
 	p.expect(lexer.OPEN_BRACKET)
 	var elements = []ast.Expr{}
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_BRACKET {
@@ -175,10 +195,12 @@ func parse_array_instantiation_expr(p *parser) ast.Expr {
 
 	return ast.ArrayInstantiationExpr{
 		Elements: elements,
+		Position: pos,
 	}
 }
 
 func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
 	var arguments = []ast.FnCallArg{}
 
 	p.expect(lexer.OPEN_PAREN)
@@ -208,6 +230,7 @@ func parse_fn_call_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 	return ast.FnCallExpr{
 		Caller:    left,
 		Arguments: arguments,
+		Position:  pos,
 	}
 }
 
@@ -216,8 +239,9 @@ func parse_fn_declare_anonymous_expr(p *parser) ast.Expr {
 	return parse_fn_declare_expr(p)
 }
 func parse_fn_declare_expr(p *parser) ast.Expr {
+	pos := p.curentTokenPosition()
 	var arguments = map[string]ast.FnArg{}
-	var typeArg ast.Type
+	var typeArg = ast.CreateUnsetType()
 
 	if p.currentTokenKind() == lexer.LESS {
 		p.advance()
@@ -229,7 +253,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 
 	var arg_index = 0
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
-		var explicitType ast.Type
+		var explicitType = ast.CreateUnsetType()
 		isMutable := p.currentTokenKind() == lexer.MUT
 		if isMutable {
 			p.advance()
@@ -254,7 +278,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 
 		arguments[argumentIdentifier] = ast.FnArg{
 			Identifier:  argumentIdentifier,
-			Position:    arg_index,
+			ArgIndex:    arg_index,
 			IsMutable:   isMutable,
 			IsReference: isReference,
 			Type:        explicitType,
@@ -268,7 +292,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 
 	p.expect(lexer.CLOSE_PAREN)
 
-	var returnType ast.Type
+	var returnType = ast.CreateUnsetType()
 
 	if p.currentTokenKind() == lexer.R_ARROW {
 		p.advance()
@@ -286,24 +310,30 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		Type:       typeArg,
 		ReturnType: returnType,
 		Body:       body,
+		Position:   pos,
 	}
 }
 
 func parse_chain_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
+
 	p.expect(lexer.DOT)
 
 	return ast.ChainExpr{
 		Assignee: left,
 		Member:   parse_expr(p, default_bp),
+		Position: pos,
 	}
 }
 
 func parse_is_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
+	pos := p.curentTokenPosition()
 	p.expect(lexer.IS)
 	right := parse_type(p, bp)
 
 	return ast.IsTypeExpr{
-		Left:  left,
-		Right: right,
+		Left:     left,
+		Right:    right,
+		Position: pos,
 	}
 }

@@ -1,50 +1,38 @@
 package ast
 
-type SymbolType struct {
-	Value string
+type Type struct {
+	Name      string
+	Arguments []Type
 }
 
-func (t SymbolType) _type() {}
+const (
+	UNSET_TYPE = "__unset__"
+	INTEGER    = "int"
+	FLOAT      = "float"
+	BOOL       = "bool"
+	FUNCTION   = "func"
+)
 
-type IntLiteralType struct {
-	Value int64
+func CreateUnsetType() Type {
+	return CreateBaseType(UNSET_TYPE)
 }
 
-func (t IntLiteralType) _type() {}
-
-type StringLiteralType struct {
-	Value string
+func CreateBaseType(name string) Type {
+	return Type{
+		Name:      name,
+		Arguments: make([]Type, 0),
+	}
 }
 
-func (t StringLiteralType) _type() {}
-
-type FnType struct {
-	Arguments  map[string]FnArg
-	ReturnType Type
+func (t Type) IsUnset() bool {
+	return t.Name == UNSET_TYPE
 }
 
-func (t FnType) _type() {}
-
-type GenericType struct {
-	Identifier string
-	Arguments  []Type
+type Position struct {
+	Start int
+	End   int
 }
 
-func (t GenericType) _type() {}
-
-type IsType struct {
-	Left  Type
-	Right Type
+func CreatePosition(start int, end int) Position {
+	return Position{Start: start, End: end}
 }
-
-func (t IsType) _type() {}
-
-type UnkownType struct{}
-
-func (t UnkownType) _type() {}
-
-type BlockType struct {
-	Body []Type
-}
-
-func (t BlockType) _type() {}
