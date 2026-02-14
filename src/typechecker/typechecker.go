@@ -63,7 +63,7 @@ func check(node any, env *env) ast.Type {
 
 	if !exists {
 		litter.D(node)
-		set_err(ast.Position{}, "Node unknown to typechecker :(")
+		set_err(ast.Position{}, fmt.Sprintf("Node %s unknown to typechecker :(", reflect.TypeOf(node)))
 		return ast.CreateUnsetType()
 	}
 
