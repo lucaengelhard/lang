@@ -30,6 +30,7 @@ func type_nud(kind lexer.TokenKind, nud_fn type_nud_handler) {
 
 func createTokenTypeLookups() {
 	type_nud(lexer.IDENTIFIER, parse_symbol_type)
+	type_nud(lexer.STAR, parse_ref_type)
 	/* 	type_nud(lexer.NUMBER, parse_number_type)
 	   	type_nud(lexer.STRING, parse_string_type) */
 	//type_nud(lexer.OPEN_PAREN, parse_fn_type)
@@ -78,6 +79,12 @@ func parse_symbol_type(p *parser) ast.Type {
 	}
 
 	return ast.Type{Name: ident.Literal, Arguments: args}
+}
+
+func parse_ref_type(p *parser) ast.Type {
+	p.expect(lexer.STAR)
+
+	return ast.Type{Name: ast.REFERENCE, Arguments: []ast.Type{parse_type(p, logical)}}
 }
 
 /* func parse_string_type(p *parser) typechecker.Type {

@@ -76,13 +76,7 @@ func parse_string_expr(p *parser) ast.Expr {
 
 func parse_symbol_expr(p *parser) ast.Expr {
 	pos := p.curentTokenPosition()
-
-	isReference := p.currentTokenKind() == lexer.STAR
-	if isReference {
-		p.advance()
-	}
-
-	return ast.SymbolExpr{Value: p.advance().Literal, IsReference: isReference, Position: pos}
+	return ast.SymbolExpr{Value: p.advance().Literal, Position: pos}
 }
 
 func parse_binary_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
@@ -259,11 +253,6 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 			p.advance()
 		}
 
-		isReference := p.currentTokenKind() == lexer.STAR
-		if isReference {
-			p.advance()
-		}
-
 		argumentIdentifier := p.expect(lexer.IDENTIFIER).Literal
 		if p.currentTokenKind() == lexer.COLON {
 			p.advance()
@@ -277,11 +266,10 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		}
 
 		arguments[argumentIdentifier] = ast.FnArg{
-			Identifier:  argumentIdentifier,
-			ArgIndex:    arg_index,
-			IsMutable:   isMutable,
-			IsReference: isReference,
-			Type:        explicitType,
+			Identifier: argumentIdentifier,
+			ArgIndex:   arg_index,
+			IsMutable:  isMutable,
+			Type:       explicitType,
 		}
 
 		if p.currentTokenKind() != lexer.CLOSE_PAREN {
