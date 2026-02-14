@@ -16,6 +16,7 @@ type env_decl struct {
 type env struct {
 	Declarations map[string]*env_decl
 	Parent       *env
+	Types        map[string]ast.Type
 }
 
 func (env *env) get(identifier string) (*env_decl, error) {
@@ -64,9 +65,37 @@ func (env *env) set_ref(identifer string, ref *env_decl) {
 	env.Declarations[identifer] = ref
 }
 
+func (env *env) get_root() *env {
+	if env.Parent == nil {
+		return env
+	}
+
+	return env.Parent.get_root()
+}
+
+func (env *env) set_type(identifer string, t ast.Type) {
+	root := env.get_root()
+
+	_, exists := root.Types[identifer]
+
+	if exists {
+		set_err(ast.Position{}, fmt.Sprintf("Type %s already exists", identifer))
+		return
+	}
+
+	root.Types[identifer] = t
+}
+
 func createEnv(parent *env) *env {
+	var types map[string]ast.Type
+
+	if parent == nil {
+		types = map[string]ast.Type{}
+	}
+
 	return &env{
 		Parent:       parent,
 		Declarations: map[string]*env_decl{},
+		Types:        types,
 	}
 }

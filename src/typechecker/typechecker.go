@@ -25,6 +25,9 @@ func Init(node ast.Stmt) []errorhandling.Error {
 
 	root := createEnv(nil)
 	check(node, root)
+
+	litter.D(root)
+
 	return errors
 }
 
@@ -40,6 +43,7 @@ func createHandlerLookup() {
 	add_handler(declaration_handler)
 	add_handler(assignment_handler)
 	add_handler(array_instantiation_handler)
+	add_handler(interface_handler)
 
 }
 
@@ -70,7 +74,6 @@ func check(node any, env *env) ast.Type {
 	}
 
 	return handler(node, env)
-
 }
 
 func expr_stmt_handler(node ast.ExpressionStmt, env *env) ast.Type {
@@ -196,4 +199,24 @@ func array_instantiation_handler(node ast.ArrayInstantiationExpr, env *env) ast.
 		Name:      ast.ARRAY,
 		Arguments: elements,
 	}
+}
+
+func interface_handler(node ast.InterfaceStmt, env *env) ast.Type {
+
+	if !node.SingleType.IsUnset() {
+		env.set_type(node.Identifier, node.SingleType)
+	} else {
+		properties := make([]ast.Type, 0)
+
+		for _, prop := range node.StructType {
+			properties = append(properties, prop.Type)
+		}
+
+		env.set_type(node.Identifier, ast.Type{
+			Name:      ast.STRUCT,
+			Arguments: properties,
+		})
+	}
+
+	return ast.CreateUnsetType()
 }

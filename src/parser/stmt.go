@@ -148,11 +148,16 @@ func parse_interface_stmt(p *parser) ast.Stmt {
 
 	if p.currentTokenKind() == lexer.ASSIGNMENT {
 		p.advance()
-		return ast.InterfaceStmt{
+
+		stmt := ast.InterfaceStmt{
 			Identifier: identifier,
 			TypeArg:    typeArg,
 			SingleType: parse_type(p, default_bp),
 		}
+
+		p.expect(lexer.SEMI_COLON)
+
+		return stmt
 	}
 
 	p.expect(lexer.OPEN_CURLY)
@@ -165,6 +170,7 @@ func parse_interface_stmt(p *parser) ast.Stmt {
 		TypeArg:    typeArg,
 		StructType: structType,
 		Position:   ast.CreatePosition(start_pos.Start, end_pos.End),
+		SingleType: ast.CreateUnsetType(),
 	}
 }
 
