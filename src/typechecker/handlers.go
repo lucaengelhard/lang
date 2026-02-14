@@ -333,8 +333,8 @@ func return_handler(node ast.ReturnStmt, env *env) ast.Type {
 func deref_handler(node ast.DerefExpr, env *env) ast.Type {
 	ref := check(node.Ref, env)
 
-	if ref.IsUnset() {
-		set_err(node.Position, "Unset reference")
+	if ref.Name != ast.REFERENCE {
+		set_err(node.Position, fmt.Sprintf("Can't deference a variable that's not a reference (%s)", ref.ToString()))
 		return ast.CreateUnsetType()
 	}
 
