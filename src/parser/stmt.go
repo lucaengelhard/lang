@@ -35,6 +35,11 @@ func parse_block_stmt(p *parser) ast.BlockStmt {
 		body = append(body, parse_stmt(p))
 	}
 
+	// Patch to prohibit crash
+	if !p.hasTokens() {
+		p.index = p.index - 1
+	}
+
 	end_pos := p.curentTokenPosition()
 
 	return ast.BlockStmt{

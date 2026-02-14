@@ -25,7 +25,6 @@ func Init(node ast.Stmt) []errorhandling.Error {
 
 	root := createEnv(nil)
 	check(node, root)
-
 	return errors
 }
 
@@ -85,6 +84,7 @@ func block_handler(node ast.BlockStmt, env *env) ast.Type {
 	for _, stmt := range node.Body {
 		check(stmt, scope)
 	}
+
 	return ast.CreateUnsetType()
 }
 
@@ -131,12 +131,16 @@ func declaration_handler(node ast.DeclarationStmt, env *env) ast.Type {
 
 	// TODO: make more sophisticated equality check, so that order of array doesn't matter for example
 	// Also partial matching doesn't work
-	if !node.Type.IsUnset() && !reflect.DeepEqual(env.get_type(node.Type.Name), computed) {
+	if !node.Type.IsUnset() && !match(env.get_type(node.Type.Name), computed) {
 		set_err(node.Position, fmt.Sprintf("Type %s doesn't match %s (%s)", computed.ToString(), node.Type.ToString(), env.get_type(node.Type.Name).ToString()))
 		return ast.CreateUnsetType()
 	}
 
-	env.set(node.Identifier, computed, true, node.IsMutable)
+	if node.Type.IsUnset() {
+		env.set(node.Identifier, computed, true, node.IsMutable)
+	} else {
+		env.set(node.Identifier, env.get_type(node.Type.Name), true, node.IsMutable)
+	}
 
 	return ast.CreateUnsetType()
 }
