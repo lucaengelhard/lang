@@ -42,6 +42,8 @@ func createHandlerLookup() {
 	add_handler(assignment_handler)
 	add_handler(array_instantiation_handler)
 	add_handler(interface_handler)
+	add_handler(struct_stmt_handler)
+	add_handler(struct_instantiation_handler)
 
 }
 
@@ -201,22 +203,67 @@ func array_instantiation_handler(node ast.ArrayInstantiationExpr, env *env) ast.
 	}
 }
 
-func interface_handler(node ast.InterfaceStmt, env *env) ast.Type {
+func wrap_property_type(identifer string, prop_type ast.Type) ast.Type {
+	return ast.Type{Name: identifer, Arguments: []ast.Type{prop_type}}
+}
 
+func interface_handler(node ast.InterfaceStmt, env *env) ast.Type {
 	if !node.SingleType.IsUnset() {
 		env.set_type(node.Identifier, node.SingleType)
 	} else {
 		properties := make([]ast.Type, 0)
 
 		for _, prop := range node.StructType {
-			properties = append(properties, ast.Type{Name: prop.Name, Arguments: []ast.Type{prop.Type}})
+			properties = append(properties, wrap_property_type(prop.Name, prop.Type))
 		}
 
 		env.set_type(node.Identifier, ast.Type{
-			Name:      ast.STRUCT,
+			Name:      ast.DICT,
 			Arguments: properties,
 		})
 	}
 
 	return ast.CreateUnsetType()
+}
+
+func struct_stmt_handler(node ast.StructStmt, env *env) ast.Type {
+	properties := make([]ast.Type, 0)
+
+	for _, prop := range node.Properties {
+		properties = append(properties, wrap_property_type(prop.Name, prop.Type))
+	}
+
+	env.set_type(node.Identifier, ast.Type{
+		Name:      ast.STRUCT,
+		Arguments: properties,
+	})
+
+	return ast.CreateUnsetType()
+}
+
+func struct_instantiation_handler(node ast.StructInstantiationExpr, env *env) ast.Type {
+	struct_type := env.get_type(node.StructIdentifier)
+
+	if struct_type.IsUnset() {
+		return struct_type
+	}
+
+	for _, prop_type := range struct_type.Arguments {
+		prop_val, exists := node.Properties[prop_type.Name]
+
+		if !exists {
+			set_err(node.Position, fmt.Sprintf("Property %s missing on struct", prop_type.Name))
+			return struct_type
+		}
+
+		computed := wrap_property_type(prop_type.Name, check(prop_val, env))
+
+		if !match(prop_type, computed) {
+			set_err(node.Position, fmt.Sprintf("Property %s expected %s but got %s", prop_type.Name, prop_type.ToString(), computed.ToString()))
+			return struct_type
+		}
+
+	}
+
+	return struct_type
 }

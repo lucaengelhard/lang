@@ -92,7 +92,7 @@ func (env *env) get_type(identifer string) ast.Type {
 	t, exists := root.Types[identifer]
 
 	if !exists {
-		set_err(ast.Position{}, fmt.Sprintf("Type %s doesn't exists", identifer))
+		set_err(ast.Position{}, fmt.Sprintf("Type %s doesn't exist", identifer))
 		return ast.CreateUnsetType()
 	}
 

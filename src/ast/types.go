@@ -16,6 +16,7 @@ const (
 	FUNCTION   = "func"
 	ARRAY      = "Array"
 	STRUCT     = "Struct"
+	DICT       = "Dict"
 )
 
 func CreateUnsetType() Type {
