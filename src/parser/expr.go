@@ -253,17 +253,15 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 
 	var arg_index = 0
 	for p.hasTokens() && p.currentTokenKind() != lexer.CLOSE_PAREN {
-		var explicitType = ast.CreateUnsetType()
 		isMutable := p.currentTokenKind() == lexer.MUT
 		if isMutable {
 			p.advance()
 		}
 
 		argumentIdentifier := p.expect(lexer.IDENTIFIER).Literal
-		if p.currentTokenKind() == lexer.COLON {
-			p.advance()
-			explicitType = parse_type(p, default_bp)
-		}
+
+		p.expect(lexer.COLON)
+		explicitType := parse_type(p, default_bp)
 
 		_, exists := arguments[argumentIdentifier]
 

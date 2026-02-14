@@ -93,6 +93,8 @@ func interpret(node any, env *env) (any, any) {
 		result = interpret_fn_call(node, env)
 	case ast.SymbolExpr:
 		result = interpret_symbol_expr(node, env)
+	case ast.DerefExpr:
+		result = interpret_deref_expr(node, env)
 	case ast.ExpressionStmt:
 		result, _ = interpret(node.Expression, env)
 	case ast.IntExpr:
@@ -144,6 +146,12 @@ func interpret_declaration(input any, env *env) {
 	env.set(declaration.Identifier, val, true, declaration.IsMutable)
 }
 
+type FnCallArg struct {
+	Identifier string
+	Value      any
+	Reference  *env_decl
+}
+
 func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 	declaration, _ := input.(ast.FnDeclareExpr)
 	block := declaration.Body
@@ -175,7 +183,7 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 				definition_arg = position_arg_map[index]
 			}
 
-			if definition_arg.IsReference {
+			if definition_arg.Type.Name == ast.REFERENCE {
 				if passed_arg.Reference == nil {
 					panic(fmt.Sprintf("Expected reference for argument %s (%v)\n", definition_arg.Identifier, definition_arg.ArgIndex))
 				}
@@ -187,7 +195,7 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 				scope.set_ref(definition_arg.Identifier, passed_arg.Reference)
 			}
 
-			if !definition_arg.IsReference {
+			if definition_arg.Type.Name != ast.REFERENCE {
 				if passed_arg.Reference != nil {
 					panic(fmt.Sprintf("Expected argument %s (%v) to be passed by value, got reference\n", definition_arg.Identifier, definition_arg.ArgIndex))
 				}
@@ -204,12 +212,6 @@ func interpret_fn_declaration(input any, env *env) func(args ...FnCallArg) any {
 		}
 		return nil
 	}
-}
-
-type FnCallArg struct {
-	Identifier string
-	Value      any
-	Reference  *env_decl
 }
 
 func interpret_fn_call(input any, env *env) any {
@@ -378,4 +380,8 @@ func interpret_arr_instantiation(input any, env *env) any {
 	}
 
 	return res
+}
+
+func interpret_deref_expr(input ast.DerefExpr, env *env) any {
+	return interpret_symbol_expr(input.Ref, env)
 }
