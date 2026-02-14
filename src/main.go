@@ -5,6 +5,7 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/errorhandling"
+	"github.com/lucaengelhard/lang/src/interpreter"
 	"github.com/lucaengelhard/lang/src/lexer"
 	"github.com/lucaengelhard/lang/src/parser"
 	"github.com/lucaengelhard/lang/src/typechecker"
@@ -25,23 +26,23 @@ func main() {
 	errors = append(errors, lexer_errors...)
 
 	// AST-Building
-	var ast ast.Stmt
+	var abstract_syntax_tree ast.Stmt
 	var parser_errors []errorhandling.Error
 	if len(errors) == 0 {
-		ast, parser_errors = parser.Parse(tokens)
+		abstract_syntax_tree, parser_errors = parser.Parse(tokens)
 		errors = append(errors, parser_errors...)
 	}
 
 	// Typechecking and updating of ast
 	if len(errors) == 0 {
-		type_errors := typechecker.Init(ast)
+		type_errors := typechecker.Init(abstract_syntax_tree)
 		errors = append(errors, type_errors...)
 	}
 
 	// Interpretation / Compilation
-	/* if len(errors) == 0 {
-		interpreter.Init(ast)
-	} */
+	if len(errors) == 0 {
+		interpreter.Init(abstract_syntax_tree)
+	}
 
 	// Error handling
 	errorhandling.PrintErrors(source, errors)
