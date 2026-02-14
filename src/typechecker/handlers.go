@@ -6,6 +6,7 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
+	"github.com/sanity-io/litter"
 )
 
 func createHandlerLookup() {
@@ -63,6 +64,8 @@ func block_handler(node ast.BlockStmt, env *env) ast.Type {
 		}
 	}
 
+	litter.D(scope)
+
 	return return_type
 }
 
@@ -109,7 +112,7 @@ func binary_expr_handler(node ast.BinaryExpr, env *env) ast.Type {
 }
 
 func declaration_handler(node ast.DeclarationStmt, env *env) ast.Type {
-	computed := check(node.AssignedValue, env)
+	computed := check(node.AssignedValue, env).Strip(ast.MUTABLE)
 	var assigned_type = ast.CreateUnsetType()
 
 	// TODO: make more sophisticated equality check, so that order of array doesn't matter for example

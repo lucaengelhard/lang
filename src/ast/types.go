@@ -55,6 +55,14 @@ func (t Type) IsUnset() bool {
 	return t.Is(UNSET_TYPE)
 }
 
+func (t Type) Strip(name string) Type {
+	if t.Name != name {
+		return t
+	}
+
+	return t.Arguments[0]
+}
+
 // TODO: Maybe optional depth argument? So the level of recursion can be set?
 func (t Type) ToString() string {
 	var arg_string strings.Builder
