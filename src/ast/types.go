@@ -1,6 +1,8 @@
 package ast
 
-import "strings"
+import (
+	"strings"
+)
 
 type Type struct {
 	Name      string
@@ -60,7 +62,15 @@ func (t Type) Strip(name string) Type {
 		return t
 	}
 
-	return t.Arguments[0]
+	return t.Arguments[0].Strip(name)
+}
+
+func (t Type) WrapUnder(inner string, outer string) Type {
+	if t.Name != outer {
+		return t.Wrap(inner)
+	}
+
+	return t.Arguments[0].WrapUnder(inner, outer).Wrap(outer)
 }
 
 // TODO: Maybe optional depth argument? So the level of recursion can be set?

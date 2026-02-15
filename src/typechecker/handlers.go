@@ -6,7 +6,6 @@ import (
 
 	"github.com/lucaengelhard/lang/src/ast"
 	"github.com/lucaengelhard/lang/src/lexer"
-	"github.com/sanity-io/litter"
 )
 
 func createHandlerLookup() {
@@ -64,8 +63,6 @@ func block_handler(node ast.BlockStmt, env *env) ast.Type {
 		}
 	}
 
-	litter.D(scope)
-
 	return return_type
 }
 
@@ -78,7 +75,7 @@ func symbol_handler(node ast.SymbolExpr, env *env) ast.Type {
 	}
 
 	if node.IsReference {
-		return ast.Type{Name: ast.REFERENCE, Arguments: []ast.Type{val.Value}}
+		return val.Value.Wrap(ast.REFERENCE)
 	}
 
 	return val.Value
@@ -132,7 +129,7 @@ func declaration_handler(node ast.DeclarationStmt, env *env) ast.Type {
 		assigned_type = assigned_type.Mutable()
 	}
 
-	env.set(node.Identifier, assigned_type, true, node.IsMutable)
+	env.set(node.Identifier, assigned_type, true)
 
 	return ast.CreateUnsetType()
 }
@@ -146,12 +143,7 @@ func assignment_handler(node ast.AssignmentExpr, env *env) ast.Type {
 		return ast.CreateUnsetType()
 	}
 
-	if !current_declaration.Value.Is(ast.MUTABLE) {
-		set_err(node.Position, fmt.Sprintf("%s is not mutable", assignee.Value))
-		return ast.CreateUnsetType()
-	}
-
-	stripped_current := current_declaration.Value.Arguments[0]
+	stripped_current := current_declaration.Value.Strip(ast.MUTABLE)
 
 	right := check(node.Right, env)
 
@@ -165,13 +157,13 @@ func assignment_handler(node ast.AssignmentExpr, env *env) ast.Type {
 			return ast.CreateUnsetType()
 		}
 
-		err = env.set(assignee.Value, computed.Mutable(), false, false)
+		err = env.set(assignee.Value, computed.Mutable(), false)
 
 		if err != nil {
 			set_err(node.Position, err.Error())
 		}
 	} else if node.Operator.Kind == lexer.ASSIGNMENT {
-		err = env.set(assignee.Value, right.Mutable(), false, false)
+		err = env.set(assignee.Value, right.Mutable(), false)
 
 		if err != nil {
 			set_err(node.Position, err.Error())
@@ -279,7 +271,7 @@ func fn_declare_handler(node ast.FnDeclareExpr, env *env) ast.Type {
 
 	for _, arg := range node.Arguments {
 		args = append(args, wrap_property_type(arg.Identifier, arg.Type))
-		scope.set(arg.Identifier, arg.Type, true, arg.IsMutable)
+		scope.set(arg.Identifier, arg.Type, true)
 	}
 
 	computed_return_type := check(node.Body, scope)

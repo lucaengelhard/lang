@@ -264,7 +264,7 @@ func parse_fn_declare_expr(p *parser) ast.Expr {
 		explicitType := parse_type(p, default_bp)
 
 		if isMutable {
-			explicitType = explicitType.Mutable()
+			explicitType = explicitType.WrapUnder(ast.MUTABLE, ast.REFERENCE)
 		}
 
 		_, exists := arguments[argumentIdentifier]
@@ -336,10 +336,10 @@ func parse_is_expr(p *parser, left ast.Expr, bp binding_power) ast.Expr {
 
 func parse_deref_expr(p *parser) ast.Expr {
 	pos := p.curentTokenPosition()
-
 	p.expect(lexer.STAR)
+
 	return ast.DerefExpr{
-		Ref:      parse_expr(p, default_bp),
+		Ref:      parse_expr(p, primary),
 		Position: pos,
 	}
 }

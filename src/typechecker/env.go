@@ -7,10 +7,8 @@ import (
 )
 
 type env_decl struct {
-	Identifier  string
-	IsMutable   bool
-	IsReference bool
-	Value       ast.Type
+	Identifier string
+	Value      ast.Type
 }
 
 type env struct {
@@ -33,17 +31,15 @@ func (env *env) get(identifier string) (*env_decl, error) {
 	return env.Parent.get(identifier)
 }
 
-func (env *env) set(identifer string, value ast.Type, isNew bool, isMutable bool) error {
+func (env *env) set(identifer string, value ast.Type, isNew bool) error {
 	if isNew {
 		if _, exists := env.Declarations[identifer]; exists {
 			panic(fmt.Sprintf("%s already exists in scope\n", identifer))
 		}
 
 		env.Declarations[identifer] = &env_decl{
-			Identifier:  identifer,
-			IsMutable:   isMutable,
-			IsReference: false,
-			Value:       value,
+			Identifier: identifer,
+			Value:      value,
 		}
 		return nil
 	}
@@ -54,18 +50,20 @@ func (env *env) set(identifer string, value ast.Type, isNew bool, isMutable bool
 		return err
 	}
 
-	if !decl.IsMutable {
+	stripped_value := decl.Value.Strip(ast.REFERENCE)
+
+	if !stripped_value.Is(ast.MUTABLE) {
+		if decl.Value.Is(ast.REFERENCE) {
+			return fmt.Errorf("%s is a reference to an immutable value\n", identifer)
+		}
+
 		return fmt.Errorf("%s is not mutable\n", identifer)
 	}
 
-	if !match(decl.Value, value) {
-		return fmt.Errorf("Type %s is not assignable to variable of type %s\n", value.ToString(), decl.Value.ToString())
+	if !match(stripped_value, value) {
+		return fmt.Errorf("Type %s is not assignable to variable of type %s\n", value.ToString(), stripped_value.ToString())
 	}
 	return nil
-}
-
-func (env *env) set_ref(identifer string, ref *env_decl) {
-	env.Declarations[identifer] = ref
 }
 
 func (env *env) get_root() *env {
